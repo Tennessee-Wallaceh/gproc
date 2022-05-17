@@ -2,7 +2,13 @@
 Guassian Process Classifiction
 
 ## Envrionment
-Python environment is being managed by conda.
+Python environment is being managed by conda, if needed, can install via (https://docs.conda.io/en/latest/miniconda.html).
+Or just execute 
+```
+cd ~
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
 Configuration is stored in the `ENV.yml` file.
 To create your environment just use `conda env create --file ENV.yml` from the base of the repo.
 Then execute `conda activate gproc` to activate the environment.
