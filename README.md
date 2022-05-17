@@ -9,3 +9,5 @@ Then execute `conda activate gproc` to activate the environment.
 To update using a new config use `conda env update --file ENV.yml --prune`.
 For other conda tasks check out the cheat sheet @ https://docs.conda.io/projects/conda/en/latest/_downloads/843d9e0198f2a193a3484886fa28163c/conda-cheatsheet.pdf .
 
+## Install
+To install in dev mode run `pip install -e .` from the root of the project repo.
