@@ -61,6 +61,7 @@ py::array_t<double> add_numpyc(py::array_t<double> array_1, py::array_t<double> 
     return out;
 }
 
+// This macro exposes our C++ functions to PYBIND11
 PYBIND11_MODULE(example, m) {
     m.def("addc", &add, "A function that adds two numbers");
     m.def("set_num_threads", &omp_set_num_threads, "Set number of threads"); // omp_set_num_threads directly from omp library
