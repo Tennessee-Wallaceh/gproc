@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import f1_score
 
+class ThresholdError(Exception):
+    pass
 
 def predictive_metrics(prob_ests, y_ests, y_test, rho):
     """
@@ -29,7 +30,7 @@ def predictive_metrics(prob_ests, y_ests, y_test, rho):
     abstention_degree = thresh_inds.shape[0]/N
 
     if abstention_degree == 0:
-        raise ValueError("Threshold value too large, no data passes")
+        raise ThresholdError("Threshold value too large, no data passes")
     
     # Get thresholded predicted and test responses, and probabilities
     y_test_threshed = y_test[thresh_inds]
@@ -37,18 +38,18 @@ def predictive_metrics(prob_ests, y_ests, y_test, rho):
     prob_ests_thresed = prob_ests[thresh_inds]
     
     if (np.unique(y_test_threshed).shape[0] == 1) | (np.unique(y_ests_threshed).shape[0] == 1):
-        raise ValueError("Threshold value too large, only one class")
+        raise ThresholdError("Threshold value too large, only one class")
         
     # Work out the capacity classifcication accuracy
     cap_acc_score = np.mean(y_test_threshed == y_ests_threshed)
     
     # Work out the capacity  F score 
-    cap_F_score = f1_score(y_test_threshed, y_ests_threshed)
+    cap_f_score = f1_score(y_test_threshed, y_ests_threshed)
     
     # Work out the capacity  AUC score
-    cap_AUC_score = roc_auc_score(y_test_threshed, prob_ests_thresed)
+    cap_auc_score = roc_auc_score(y_test_threshed, prob_ests_thresed)
     
-    return abstention_degree, cap_acc_score, cap_F_score, cap_AUC_score
+    return abstention_degree, cap_acc_score, cap_f_score, cap_auc_score
 
 def abstention_metrics(prob_ests, y_ests, y_test, rhos):
     """
@@ -68,7 +69,7 @@ def abstention_metrics(prob_ests, y_ests, y_test, rhos):
     for i in range(rhos.shape[0]):
         try:
             cap_metrics[i, :] = predictive_metrics(prob_ests, y_ests, y_test, rho[i])
-        except ValueError:
+        except ThresholdError:
             return cap_metrics[0:i, ]
         
     return cap_metrics
@@ -94,7 +95,7 @@ def max_threshold(prob_ests):
         
     return max_thresh
 
-def inspect_metrics(cap_metrics):
+def inspect_metrics(accuracy_ax, f_score_ax, auc_ax, cap_metrics):
     """
     Produces plots of the capacity accuracy, capacity F score and capacity AUC scores vs
     the degree of abstention
@@ -103,21 +104,18 @@ def inspect_metrics(cap_metrics):
                                         accuracy capacity F score, capacity AUC score
     """
     
-    fig, ax = plt.subplots(nrows = 1, ncols = 3, figsize = (20, 5))
     
-    ax[0].plot(cap_metrics[:, 0], cap_metrics[:, 1], label = 'Capacity Accuracy Score')
-    ax[0].set_xlabel('Degree of Abstention')
-    ax[0].set_ylabel('Capacity Classification Accuracy')
-    ax[0].set_ylim([0,1.05])
+    accuracy_ax.plot(cap_metrics[:, 0], cap_metrics[:, 1], label = 'Capacity Accuracy Score')
+    accuracy_ax.set_xlabel('Degree of Abstention', fontsize = 15)
+    accuracy_ax.set_ylabel('Capacity Classification Accuracy', fontsize = 15)
+    accuracy_ax.set_ylim([-0.05, 1.05])
     
-    ax[1].plot(cap_metrics[:, 0], cap_metrics[:, 2], label = 'Capacity F Score')
-    ax[1].set_xlabel('Degree of Abstention')
-    ax[1].set_ylabel('Capacity F Score')
-    ax[1].set_ylim([0,1.05])
+    f_score_ax.plot(cap_metrics[:, 0], cap_metrics[:, 2], label = 'Capacity F Score')
+    f_score_ax.set_xlabel('Degree of Abstention', fontsize = 15)
+    f_score_ax.set_ylabel('Capacity F Score', fontsize = 15)
+    f_score_ax.set_ylim([-0.05, 1.05])
     
-    ax[2].plot(cap_metrics[:, 0], cap_metrics[:, 3], label = 'Capacity AUC Score')
-    ax[2].set_xlabel('Degree of Abstention')
-    ax[2].set_ylabel('Capacity AUC Score')
-    ax[2].set_ylim([0,1.05])
-    
-    plt.show()
+    auc_ax.plot(cap_metrics[:, 0], cap_metrics[:, 3], label = 'Capacity AUC Score')
+    auc_ax.set_xlabel('Degree of Abstention', fontsize = 15)
+    auc_ax.set_ylabel('Capacity AUC Score', fontsize = 15)
+    auc_ax.set_ylim([-0.05, 1.05])
