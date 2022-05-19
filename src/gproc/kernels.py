@@ -16,5 +16,7 @@ def squared_exponential(x_1, x_2, lengthscale=0.5, variance=1.0):
 
     :returns K, N x M matrix, K_{ij} = k(x_i, x_j; lengthscale, variance)
     """
-    sq_diffs = cdist(x_1, x_2, metric='sqeuclidean')
+    sq_diffs = cdist(x_1, x_2, metric =' sqeuclidean')
     return variance * np.exp(-0.5 * sq_diffs / lengthscale)
+
+
