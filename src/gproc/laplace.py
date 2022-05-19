@@ -2,10 +2,19 @@ from scipy.stats import norm
 from scipy.linalg import cho_factor, cho_solve
 import numpy as np
 
-JITTER = 1e-2 # Add so-called jitter for stability
-def chol_inverse(X): 
+JITTER = 1e-5 # Add so-called jitter for stability of inversion
+
+def chol_inverse(X):
+    """
+    Computes the Cholesky decomposition X=LL^T, and uses this to compute the inverse of X.
+    Only valid for symmetric X.
+
+    :param X, N x N numpy array 
+    
+    :returns X^{-1}, the inverse, such that X^{-1}X = I
+    """
     N = X.shape[0]
-    chol = cho_factor(X + JITTER * np.eye(N), lower=True) 
+    chol = cho_factor(X + JITTER * np.eye(N), lower=True, check_finite=True) 
     return cho_solve(chol, np.eye(N))
 
 def laplace_approximation_probit(y, inverse_gram, max_iterations=100, tol=1e-5):
