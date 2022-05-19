@@ -17,6 +17,3 @@ def sample_at_x(x, kernel_fcn=squared_exponential, kernel_params={}, likelihood=
     y = np.random.binomial(1, p=prob_y) # 1 sample for each N of elements of prob_y
     y[y == 0] = -1
     return y, prob_y, f
-
-
-print('wat')
