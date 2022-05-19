@@ -17,3 +17,10 @@ For other conda tasks check out the cheat sheet @ https://docs.conda.io/projects
 
 ## Install
 To install in dev mode run `pip install -e .` from the root of the project repo.
+
+C++ dependencies are built by `pybind11`.
+This package is installed by `pip` in the `ENV.yml`.
+To use this we add `"pybind11~=2.6.1"` to our required build systems in `pyproject.toml`.
+Additionally, we need to add a build step to our `setup.py` file, which will build `.cpp` files in the `cpp/` directory and map to conigured python module structure.
+For more details look at https://pybind11.readthedocs.io/en/latest/basics.html .
+Static configuration is managed in `setup.cfg`.
