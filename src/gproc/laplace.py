@@ -8,7 +8,7 @@ def chol_inverse(X):
     chol = cho_factor(X + JITTER * np.eye(N), lower=True) 
     return cho_solve(chol, np.eye(N))
 
-def laplace_approximation_probit(y, gram, max_iterations=100, tol=1e-5):
+def laplace_approximation_probit(y, inverse_gram, max_iterations=100, tol=1e-5):
     """
     Computes the laplace approximation to the latent function implied by the model:
 
@@ -22,10 +22,9 @@ def laplace_approximation_probit(y, gram, max_iterations=100, tol=1e-5):
     With an approximation q(f) = normal(mu, cov)
 
     :param y: N x 1 numpy array containing 1 or -1
-    :param gram: N x N numpy array
+    :param inverse_gram: N x N numpy array
     """
     N = y.shape[0]
-    inverse_gram = chol_inverse(gram)
 
     # The loglikelihood differentiated w.r.t each f
     def ll_gradients(f):
@@ -34,16 +33,18 @@ def laplace_approximation_probit(y, gram, max_iterations=100, tol=1e-5):
         df_2_ll = -np.square(pdf_cdf_ratio) - f * df_ll  # N x 1
         return df_ll, np.diag(df_2_ll)
 
+    # The objective we are maximising log p(y | f) + log p(f | gram) + const
     def objective(f):
         ll = np.sum(norm.logcdf(y * f))
         l_prior = -0.5 * f.dot(inverse_gram).dot(f)
         return ll + l_prior
 
+    # Newton method update step (details in Rasmussen section 3.4)
     def update(f):
         df_ll, hessian = ll_gradients(f)
         W = -hessian
         laplace_cov = chol_inverse(inverse_gram + W)
-        return laplace_cov.dot(W.dot(f) + df_ll), laplace_cov
+        return laplace_cov.dot(W.dot(f) + df_ll), df_ll, laplace_cov
     
     # Perform MAP of f using Newton method
     f = np.zeros(N) # Initialise at 0
@@ -51,7 +52,7 @@ def laplace_approximation_probit(y, gram, max_iterations=100, tol=1e-5):
     objective_history[0] = objective(f)
     converged = False
     for i in range(1, max_iterations):
-        f, laplace_cov = update(f)
+        f, df_ll, laplace_cov = update(f)
         objective_history[i] = objective(f)
 
         if np.abs(objective_history[i - 1] - objective_history[i]) < tol:
@@ -60,4 +61,4 @@ def laplace_approximation_probit(y, gram, max_iterations=100, tol=1e-5):
     
     objective_history = objective_history[:i] # Slice down to the used iterations
 
-    return f, laplace_cov, objective_history, converged
+    return f, df_ll, laplace_cov, objective_history, converged
