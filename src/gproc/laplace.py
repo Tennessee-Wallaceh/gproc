@@ -43,6 +43,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
         the precomputed inverse gram matrix corresponding to the observations
 
     Returns
+    ----------
 
     :returns proposed_f: num_observations x 1 numpy array, the mean of the Laplace approximation
     :returns df_ll: num_observations x 1 numpy array, the gradient of the log-likelihood wrt each :math:`f_i`
