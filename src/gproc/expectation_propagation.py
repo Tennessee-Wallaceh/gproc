@@ -5,8 +5,6 @@ from scipy.linalg import cho_factor, cho_solve, cholesky, sqrtm, det
 from scipy.linalg import norm as la_norm
 import numpy as np
 
-JITTER = 1e-5 
-
 def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-5):
     """
     Computes the expectation propagation (Algorithm 3.5) approximation to the latent
@@ -64,10 +62,10 @@ def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-
         mu = Sig.dot(nu_site)
         return Sig, mu
     
-    def re_posterior_params(tau_site, K, JITTER=1e-5):
+    def re_posterior_params(tau_site, K, jitter=1e-5):
         """Recompute approximate posterior parameters"""
         S_site_sqrt = np.diag(np.sqrt(tau_site))
-        L = cho_factor(JITTER * np.eye(N) + S_site_sqrt.dot(K).dot(S_site_sqrt), lower=True, check_finite=True)
+        L = cho_factor(jitter * np.eye(N) + S_site_sqrt.dot(K).dot(S_site_sqrt), lower=True, check_finite=True)
         V = cho_solve(L, S_site_sqrt.dot(K))
         Sig = K - V.T.dot(V)
         mu_proposed = Sig.dot(nu_site)
@@ -99,7 +97,7 @@ def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-
             Sig, mu = posterior_params(Sig, tau_delta, nu_site)
 
         # Recompute the approximate posterior parameters        
-        L, Sig, mu_proposed = re_posterior_params(tau_site, K, JITTER=1e-5)
+        L, Sig, mu_proposed = re_posterior_params(tau_site, K)
 
         # Check convergence condition
         if la_norm(mu_proposed, mu) < tol:
