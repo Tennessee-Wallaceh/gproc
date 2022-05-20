@@ -69,7 +69,7 @@ def locally_periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
     :returns K, N x M matrix, K_{ij} = k(x_i, x_j; lengthscale, variance, period)
     """
     
-    return np.multiply(squared_exponential(x_1, x_2), periodic_kernel(x_1, x_2))
+    return np.multiply(squared_exponential(x_1, x_2, lengthscale, variance), periodic(x_1, x_2, lengthscale, variance, period))
 
 def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
     """
@@ -117,7 +117,9 @@ def multiply(x_1, x_2, kernels):
     :returns K, N x M matrix, sum of kernel matrices 
     """
     
-    grams = [kernel(x_1, x_2, **kernel_kwargs)
-             for kernel, kernel_kwargs in kernels]
+    grams = [
+    kernel(x_1, x_2, **kernel_kwargs) 
+    for kernel, kernel_kwargs in kernels
+    ]
     
     return reduce(np.multiply, grams)
