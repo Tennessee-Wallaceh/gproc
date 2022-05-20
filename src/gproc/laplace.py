@@ -11,9 +11,16 @@ def chol_inverse(symmetric_x):
     Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
     Only valid for symmetric x.
 
-    :param x, dim_1 x dim_1 numpy array
+    Parameters
+    ----------
 
-    :returns x^{-1}, the inverse, such that x^{-1}X = I
+    symmetric_x: num_observations x num_observations numpy array
+        no symmetry checks are performed 
+
+    Returns
+    ----------
+    x_inv: num_observations x num_observations numpy array
+        :math:`x^{-1}`, the inverse, such that :math:`x^{-1}x = I`.
     """
     dim_1 = symmetric_x.shape[0]
     chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
