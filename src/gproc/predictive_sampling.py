@@ -16,7 +16,6 @@ def blr_predictive(x_test, samples):
     """
     # Initialise arrays to hold predictive probabilities and predictive samples
     # for each test point and posterior sample
-    probs = np.zeros((x_test.shape[0], samples.shape[0]))
     y_preds = np.zeros((x_test.shape[0], samples.shape[1]))
     
     # For each test point, and posterior sample, compute the probability of label 1
