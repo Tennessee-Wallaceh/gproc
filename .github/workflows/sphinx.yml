@@ -26,7 +26,7 @@ jobs:
       shell: bash  
       run: |
         conda env create --file ENV.yml
-        conda init && source ~/.bashrc && conda activate gproc
+        conda init && source ~/.bashrc && conda activate gproc && pip install .
 
     - name: Build
       run: |
