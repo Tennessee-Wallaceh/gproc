@@ -8,7 +8,22 @@ import numpy as np
 JITTER = 1e-5 
 
 def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-5):
-    """Algorithm 3.5"""
+    """
+    Computes the expectation propagation (Algorithm 3.5) approximation to the latent
+    function implied by the model:
+
+        p(y_i | f_i) = norm_cdf(y_i * f_i)
+        p(f | gram) = normal(0, gram)
+
+    We target the posterior:
+
+        p(f | y) = Z * p(y | f) * p(f | gram)
+
+    With an approximation q(f) = normal(mu, Sig).
+
+    :param y: num_observations x 1 numpy array containing 1 or -1
+    :param gram: num_observations x num_observations numpy array
+    """
     
     # Data size and gram matrix relabelling
     N = y.shape[0]
