@@ -9,6 +9,9 @@ Welcome to gproc's documentation!
 .. automodule:: gproc.laplace
     :members:
 
+.. automodule:: gproc.generative
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
