@@ -13,6 +13,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -31,8 +32,57 @@
 
           <div class="body" role="main">
             
-  <section id="welcome-to-gproc-s-documentation">
-<h1>Welcome to gproc’s documentation!<a class="headerlink" href="#welcome-to-gproc-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <section id="module-gproc.laplace">
+<span id="welcome-to-gproc-s-documentation"></span><h1>Welcome to gproc’s documentation!<a class="headerlink" href="#module-gproc.laplace" title="Permalink to this headline">¶</a></h1>
+<p>Provides functions for performing Laplace approximations to GP classification posteriors.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.laplace.chol_inverse">
+<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">chol_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.chol_inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
+Only valid for symmetric x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symmetric_x</strong> (<em>num_observations x num_observations numpy array</em>) – no symmetry checks are performed</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x, such that <span class="math notranslate nohighlight">\(x^{-1}symmetric_x = I\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>num_observations x num_observations numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.laplace.laplace_approximation_probit">
+<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">laplace_approximation_probit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observed_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.laplace_approximation_probit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the laplace approximation to the latent function implied by the model:</p>
+<div class="math notranslate nohighlight">
+\[p(y_i | f_i) = \Phi(y_i * f_i)\]</div>
+<div class="math notranslate nohighlight">
+\[p(f | K) = \mathcal{N}(0, K)\]</div>
+<p>Where <span class="math notranslate nohighlight">\(\Phi\)</span> is the standard normal CDF and K is a gram matrix.</p>
+<p>We target the posterior:</p>
+<div class="math notranslate nohighlight">
+\[p(f | y) \propto p(y | f)p(f | gram)\]</div>
+<p>with the Laplace approximation <span class="math notranslate nohighlight">\(q(f) = normal(mu, cov)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>num_observations x 1 numpy array</em>) – array containing 1 or -1, the observations</p></li>
+<li><p><strong>inverse_gram</strong> (<em>num_observations x num_observations numpy array</em>) – the precomputed inverse gram matrix corresponding to the observations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>returns proposed_f: num_observations x 1 numpy array, the mean of the Laplace approximation</em></p></li>
+<li><p>returns df_ll: num_observations x 1 numpy array, the gradient of the log-likelihood wrt each <span class="math notranslate nohighlight">\(f_i\)</span></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 <div class="toctree-wrapper compound">
 </div>
 </section>
