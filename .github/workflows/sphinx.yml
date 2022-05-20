@@ -23,10 +23,10 @@ jobs:
         activate-environment: ""
 
     - name: Package install
+      shell: bash  
       run: |
         python -m pip install --upgrade pip
         conda env create --file ENV.yml 
-        source ~/anaconda3/etc/profile.d/conda.sh
         conda activate gproc
 
     - name: Build
