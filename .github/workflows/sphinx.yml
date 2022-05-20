@@ -30,7 +30,11 @@ jobs:
 
     - name: Build
       run: |
-        cd docs && make html
+        conda init && 
+        source ~/.bashrc && 
+        conda activate gproc && 
+        cd docs && 
+        make html
 
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4.3.3
