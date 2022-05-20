@@ -20,7 +20,7 @@ def chol_inverse(symmetric_x):
     Returns
     ----------
     x_inv: num_observations x num_observations numpy array
-        :math:`x^{-1}`, the inverse, such that :math:`x^{-1}x = I`.
+        :math:`x^{-1}`, the inverse of symmetric_x, such that :math:`x^{-1}symmetric_x = I`.
     """
     dim_1 = symmetric_x.shape[0]
     chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
