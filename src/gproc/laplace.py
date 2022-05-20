@@ -23,17 +23,29 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
     """
     Computes the laplace approximation to the latent function implied by the model:
 
-        p(y_i | f_i) = norm_cdf(y_i * f_i)
-        p(f | gram) = normal(0, gram)
+    .. math:: p(y_i | f_i) = \Phi(y_i * f_i)
+    .. math:: p(f | K) = \mathcal{N}(0, K)
+
+    Where :math:`\Phi` is the standard normal CDF and K is a gram matrix.
 
     We target the posterior:
 
-        p(f | y) = Z * p(y | f) * p(f | gram)
+    .. math:: p(f | y) \propto p(y | f)p(f | gram)
 
-    With an approximation q(f) = normal(mu, cov)
+    with the Laplace approximation :math:`q(f) = normal(mu, cov)`.
 
-    :param y: num_observations x 1 numpy array containing 1 or -1
-    :param inverse_gram: num_observations x num_observations numpy array
+    Parameters
+    ----------
+    y : num_observations x 1 numpy array
+        array containing 1 or -1, the observations
+
+    inverse_gram: num_observations x num_observations numpy array
+        the precomputed inverse gram matrix corresponding to the observations
+
+    Returns
+
+    :returns proposed_f: num_observations x 1 numpy array, the mean of the Laplace approximation
+    :returns df_ll: num_observations x 1 numpy array, the gradient of the log-likelihood wrt each :math:`f_i`
     """
     num_observations = observed_y.shape[0]
 
