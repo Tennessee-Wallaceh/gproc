@@ -12,6 +12,9 @@ Welcome to gproc's documentation!
 .. automodule:: gproc.generative
     :members:
 
+.. automodule:: gproc.kernels
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

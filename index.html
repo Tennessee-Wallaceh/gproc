@@ -45,7 +45,7 @@ Only valid for symmetric x.</p>
 <dd class="field-odd"><p><strong>symmetric_x</strong> (<em>num_observations x num_observations numpy array</em>) – no symmetry checks are performed</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x, such that <span class="math notranslate nohighlight">\(x^{-1}symmetric_x = I\)</span>.</p>
+<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>num_observations x num_observations numpy array</p>
@@ -65,7 +65,7 @@ Only valid for symmetric x.</p>
 <p>We target the posterior:</p>
 <div class="math notranslate nohighlight">
 \[p(f | y) \propto p(y | f)p(f | gram)\]</div>
-<p>with the Laplace approximation <span class="math notranslate nohighlight">\(q(f) = normal(mu, cov)\)</span>.</p>
+<p>with the Laplace approximation <span class="math notranslate nohighlight">\(q(f) = \mathcal{N}(\mu, \Sigma)\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -83,10 +83,193 @@ Only valid for symmetric x.</p>
 </dl>
 </dd></dl>
 
-<span class="target" id="module-gproc.generative"></span><dl class="py function">
+<span class="target" id="module-gproc.generative"></span><p>Functions for generating example classification problems.</p>
+<dl class="py function">
 <dt class="sig sig-object py" id="gproc.generative.sample_at_x">
 <span class="sig-prename descclassname"><span class="pre">gproc.generative.</span></span><span class="sig-name descname"><span class="pre">sample_at_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn=&lt;function</span> <span class="pre">squared_exponential&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">likelihood=&lt;bound</span> <span class="pre">method</span> <span class="pre">rv_continuous.cdf</span> <span class="pre">of</span> <span class="pre">&lt;scipy.stats._continuous_distns.norm_gen</span> <span class="pre">object&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.generative.sample_at_x" title="Permalink to this definition">¶</a></dt>
-<dd><p>:params x, N x d matrix of input locations</p>
+<dd><p>Samples a class label at each provided input point according to the GP classification model.
+Allows arbitrary kernel function and likelihood.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N x D numpy array</em>) – Array of the input locations at which to draw samples.</p></li>
+<li><p><strong>kernel_fcn</strong> (fcn: <span class="math notranslate nohighlight">\(\mathbb{R}^{N × D} × \mathbb{R}^{M × D} → \mathbb{R}^{N × M}\)</span>) – Kernel function which produces gram matrix given two sets of inputs</p></li>
+<li><p><strong>kernel_params</strong> (<em>dict</em>) – kwargs to pass on to the kernel function</p></li>
+<li><p><strong>likelihood</strong> (fcn: <span class="math notranslate nohighlight">\(\mathbb{R}^{N} → (0, 1)^{N}\)</span>) – The likelihood of a positive samples given the latent function <span class="math notranslate nohighlight">\(p(y=1 | f)\)</span></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>y</strong> (<em>N x 1 numpy integer array</em>) – The sampled class labels, either +1 or -1</p></li>
+<li><p><strong>prob_y</strong> (<em>N x 1 numpy array</em>) – The probability of a positive sample at each point</p></li>
+<li><p><strong>f</strong> (<em>N x 1 numpy array</em>) – The latent function value at each input point.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-gproc.kernels"></span><p>A number of python kernels, as defined in <a class="reference external" href="https://www.cs.toronto.edu/~duvenaud/cookbook/">https://www.cs.toronto.edu/~duvenaud/cookbook/</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.add">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add together an arbitrary number of kernels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>kernels</strong> (<em>iterable</em><em>(</em><em>(</em><em>kernel_fnc</em><em>, </em><em>kernel_parameters</em><em>)</em><em>, </em><em>...</em><em>)</em>) – A number of kernel function and parameter tuples.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j) = \sum_{l=1}^{L}k_l(x_i, x_j)\)</span>,
+for L kernels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.linear">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>A linear kernel is a non-stationary kernel, which when used with a GP, is equivalent to
+Bayesian linear regression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>constant_variance</strong> (<em>float</em>) – Controls height of function at 0</p></li>
+<li><p><strong>variance</strong> (<em>float</em>) – The average distance from the mean</p></li>
+<li><p><strong>offset</strong> (<em>float</em>) – x coordinate of location all functions go through</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.locally_periodic">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">locally_periodic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.locally_periodic" title="Permalink to this definition">¶</a></dt>
+<dd><p>A squared exponential kernel multiplied by a periodic kernel. Allows one to model periodic functions
+which can vary slowly over time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>lengthscale</strong> (<em>float</em>) – Lower lengthscale gives “wigglier” functions</p></li>
+<li><p><strong>variance</strong> (<em>float</em>) – The average distance from the mean</p></li>
+<li><p><strong>period</strong> (<em>float</em>) – Distance between repititions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.multiply">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">multiply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.multiply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply together an arbitrary number of kernels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>kernels</strong> (<em>iterable</em><em>(</em><em>(</em><em>kernel_fnc</em><em>, </em><em>kernel_parameters</em><em>)</em><em>, </em><em>...</em><em>)</em>) – A number of kernel function and parameter tuples.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j) = \prod_{l=1}^{L}k_l(x_i, x_j)\)</span>,
+for L kernels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.periodic">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">periodic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.periodic" title="Permalink to this definition">¶</a></dt>
+<dd><p>The periodic kernel allows one to model functions which repeat themselves exactly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>lengthscale</strong> (<em>float</em>) – Lower lengthscale gives “wigglier” functions</p></li>
+<li><p><strong>variance</strong> (<em>float</em>) – The average distance from the mean</p></li>
+<li><p><strong>period</strong> (<em>float</em>) – Distance between repititions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.rational_quadratic">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">rational_quadratic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.rational_quadratic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rational Quadratic Kernel, equivalent to adding together many Squared Exponential kernels with different
+lengthscales. Weight parameter determine relative weighting of large and small scale variations. When
+the weighting goes to infinity, RQ = SE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>lengthscale</strong> (<em>float</em>) – Lower lengthscale gives “wigglier” functions</p></li>
+<li><p><strong>variance</strong> (<em>float</em>) – The average distance from the mean</p></li>
+<li><p><strong>weighting</strong> (<em>float</em>) – Relative weighting of large and small scale variations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.kernels.squared_exponential">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">squared_exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.squared_exponential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Also known as RBF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>lengthscale</strong> (<em>float</em>) – Lower lengthscale gives “wigglier” functions</p></li>
+<li><p><strong>variance</strong> (<em>float</em>) – The average distance from the mean</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N x M matrix,</p>
+</dd>
+</dl>
 </dd></dl>
 
 <div class="toctree-wrapper compound">
