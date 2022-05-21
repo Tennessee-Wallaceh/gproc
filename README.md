@@ -31,3 +31,4 @@ Documented in NumPy style.
 Documentation is built automatically by sphinx.
 To build run `make html` from the `docs` directory.
 The corresponding docs are then found in `docs/_build/index.html`.
+On merge to main, the docs are rebuilt and deployed automatically to `https://tennessee-wallaceh.github.io/gproc/`.
