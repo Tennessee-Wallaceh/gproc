@@ -28,13 +28,17 @@ jobs:
         conda env create --file ENV.yml
         conda init && source ~/.bashrc && conda activate gproc && pip install .
 
+    # Build has to re-write _static to static for compatibility with GH pages
     - name: Build
       run: |
         conda init && 
         source ~/.bashrc && 
         conda activate gproc && 
         cd docs && 
-        make html
+        make html &&
+        cd _build/html &&
+        sed -i 's/_static/static/g' index.html &&
+        mv _static/ static/
 
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4.3.3
