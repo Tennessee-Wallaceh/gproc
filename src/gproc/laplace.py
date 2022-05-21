@@ -13,14 +13,13 @@ def chol_inverse(symmetric_x):
 
     Parameters
     ----------
-
     symmetric_x: num_observations x num_observations numpy array
         no symmetry checks are performed 
 
     Returns
     ----------
     x_inv: num_observations x num_observations numpy array
-        :math:`x^{-1}`, the inverse of symmetric_x, such that :math:`x^{-1}symmetric_x = I`.
+        :math:`x^{-1}`, the inverse of symmetric_x
     """
     dim_1 = symmetric_x.shape[0]
     chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
@@ -39,7 +38,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
 
     .. math:: p(f | y) \propto p(y | f)p(f | gram)
 
-    with the Laplace approximation :math:`q(f) = normal(mu, cov)`.
+    with the Laplace approximation :math:`q(f) = \mathcal{N}(\mu, \Sigma)`.
 
     Parameters
     ----------
@@ -51,7 +50,6 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
 
     Returns
     ----------
-
     :returns proposed_f: num_observations x 1 numpy array, the mean of the Laplace approximation  
     :returns df_ll: num_observations x 1 numpy array, the gradient of the log-likelihood wrt each :math:`f_i`
     """
