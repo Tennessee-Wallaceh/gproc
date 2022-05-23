@@ -24,3 +24,12 @@ To use this we add `"pybind11~=2.6.1"` to our required build systems in `pyproje
 Additionally, we need to add a build step to our `setup.py` file, which will build `.cpp` files in the `cpp/` directory and map to conigured python module structure.
 For more details look at https://pybind11.readthedocs.io/en/latest/basics.html .
 Static configuration is managed in `setup.cfg`.
+
+## Documentation
+
+Documented in NumPy style.
+Documentation is built automatically by sphinx.
+To build run `make html` from the `docs` directory.
+The corresponding docs are then found in `docs/_build/index.html`.
+On merge to main, the docs are rebuilt and deployed automatically to `https://tennessee-wallaceh.github.io/gproc/`.
+For the automatic documentation to be generated the configuration needs to be added to `docs/index.rst`.
