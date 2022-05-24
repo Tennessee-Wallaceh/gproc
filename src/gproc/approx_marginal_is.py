@@ -36,14 +36,14 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, kernel_fcn=squared_exponentia
     # Define log joint function
     def log_joint(y, f, inverse_gram, log_gram_det):
         log_likelihood = np.sum(norm.logcdf(y * f))
-        log_prior = -0.5 * ( y.shape[0] * np.log(2 * np.pi) - log_gram_det - f.dot(inverse_gram).dot(f) )
+        log_prior = -0.5 * ( y.shape[0] * np.log(2 * np.pi) + log_gram_det + f.dot(inverse_gram).dot(f) )
         return log_likelihood + log_prior
 
     # Define log density of Normal approximation q
     def q_log_pdf(f, inverse_q_cov, log_q_det):
-        return -0.5 * ( f.shape[0] * np.log(2 * np.pi) - log_q_det - f.dot(inverse_q_cov).dot(f) )
+        return -0.5 * ( f.shape[0] * np.log(2 * np.pi) + log_q_det + f.dot(inverse_q_cov).dot(f) )
 
-    # Sample latent functions from the normal approximation to 
+    # Sample latent functions from the normal approximation to full posterior
     f_samples = np.random.multivariate_normal(q_mean, q_cov, N_imp)
     
     # Importance sum
