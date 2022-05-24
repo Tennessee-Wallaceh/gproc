@@ -45,7 +45,7 @@ def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-
     def marginal_moments(nu_cav, tau_cav, y, i):
         """Compute marginal moments"""
         z_i = ( y[i] * nu_cav[i] / tau_cav[i] ) / np.sqrt( 1 + tau_cav[i]**(-1) )
-        mu_hat = ( nu_cav[i] / tau_cav[i] ) + ( y[i] * tau_cav[i]**(-1) * norm.pdf(z[i]) ) / ( norm.cdf(z[i]) * np.sqrt( 1 + tau_cav[i]**(-1) ) ) 
+        mu_hat = ( nu_cav[i] / tau_cav[i] ) + ( ( y[i] * tau_cav[i]**(-1) * norm.pdf(z[i]) ) / ( norm.cdf(z[i]) * np.sqrt( 1 + tau_cav[i]**(-1) ) ) )
         var_hat = tau_cav[i]**(-1)  - ( ( tau_cav[i]**(-2) * norm.pdf(z[i]) ) / ( ( 1 + tau_cav[i]**(-1) ) * norm.cdf(z[i]) ) ) * ( z[i] + ( norm.pdf(z[i]) / norm.cdf(z[i]) ) ) 
         return z_i, mu_hat, var_hat
     
@@ -58,29 +58,29 @@ def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-
     
     def posterior_params(Sig, tau_delta, nu_site):
         """Update approximate posterior parameters"""
-        Sig = Sig - ( ( tau_delta**(-1) + Sig[i, i] )**(-1) * Sig[:, i].dot(Sig[:, i]) )
+        Sig = Sig - ( ( tau_delta**(-1) + Sig[i, i] )**(-1) * np.outer(Sig[:, i], Sig[:, i]) )
         mu = Sig.dot(nu_site)
         return Sig, mu
     
-    def re_posterior_params(tau_site, K, jitter=1e-5):
+    def re_posterior_params(tau_site, K):
         """Recompute approximate posterior parameters"""
         S_site_sqrt = np.diag(np.sqrt(tau_site))
-        L = cho_factor(jitter * np.eye(N) + S_site_sqrt.dot(K).dot(S_site_sqrt), lower=True, check_finite=True)
+        L = cho_factor(np.eye(N) + S_site_sqrt.dot(K).dot(S_site_sqrt), lower=True, check_finite=True)
         V = cho_solve(L, S_site_sqrt.dot(K))
-        Sig = K - V.T.dot(V)
+        Sig = K - (V.T).dot(V)
         mu_proposed = Sig.dot(nu_site)
         return L[0], Sig, mu_proposed
     
     def mark_lik_ev(tau_cav, L, tau_site, nu_site, nu_cav):
-        """Compute marginal likelihood log evidence"""
+        """Compute marginal likelihood log evidence"""        
         one = np.sum( np.log( np.diagonal(L) ) )
         two = 0.5 * nu_site.dot( Sig - np.diag( (tau_cav + tau_site)**(-1) ) ).dot(nu_site)
-        three = np.sum( np.log( norm.cdf( y.dot( nu_cav / tau_cav ) / ( np.sqrt( 1 + tau_cav**(-1) ) ) ) ) )
-        four = 0.5 * np.log( 1 + tau_site.dot( tau_cav**(-1) ) )
-        five = 0.5 * (nu_cav / tau_cav).dot(T).dot( np.diag( (tau_cav + tau_site)**(-1) ) ).dot( S.dot(nu_cav / tau_cav) - 2 * nu_site)
+        three = np.sum( norm.logcdf( ( y * nu_cav / tau_cav ) / ( np.sqrt( 1 + tau_cav**(-1) ) ) ) )
+        four = 0.5 * np.sum ( np.log( 1 + tau_site * tau_cav**(-1) ) ) 
+        five = 0.5 * (nu_cav / tau_cav).dot( np.diag(tau_cav) ).dot( np.diag( (tau_cav + tau_site)**(-1) ) ).dot( np.diag(tau_site).dot(nu_cav / tau_cav) - 2 * nu_site)
         return one + two + three + four + five
     
-    for i in range(1, max_iterations):
+    for k in range(1, max_iterations):
         mu = mu_proposed
         
         for i in range(N):
@@ -100,7 +100,7 @@ def expectation_propagation_probit(observed_y, gram, max_iterations=100, tol=1e-
         L, Sig, mu_proposed = re_posterior_params(tau_site, K)
 
         # Check convergence condition
-        if la_norm(mu_proposed, mu) < tol:
+        if la_norm(mu_proposed - mu) < tol:
             converged = True
             break
     
