@@ -12,7 +12,7 @@ def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, ver
     Parameters
     ----------
     iters: float
-        number of iterations of the Metropolis Hastings algorithm
+        number of iterations of the joint sampling algorithm
         
     y: N dimensional numpy vector
         responses
