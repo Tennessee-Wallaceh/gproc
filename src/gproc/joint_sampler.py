@@ -65,7 +65,7 @@ def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, ver
     
     for i in tqdm(range(iters), disable=not(verbose)):
         # Get latent function sample corresponding to current kernel params
-        K = squared_exponential(x, x, lengthscale = th_arr[i, 0], variance = th_arr[i, 1])
+        K = squared_exponential(x, x, lengthscale = np.exp(th_arr[i, 0]), variance = np.exp(th_arr[i, 1]))
         K_chol = np.linalg.cholesky(K + 1e-05 * np.eye(K.shape[0]))
         f_arr[i, :] = ess_samples_probit(K_chol, y, 1, burn_in, verbose = False)
         
