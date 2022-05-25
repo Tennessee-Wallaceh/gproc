@@ -6,13 +6,17 @@ def ess_step(f, K_chol, L):
     """
     Performs one transition of the Elliptic Slice Sampling algorithm.
     See http://proceedings.mlr.press/v9/murray10a/murray10a.pdf for details
+
     Parameters
     ----------
     f: N dimensional numpy vector
         previous sample from p(f | y, theta)
+
     K_chol: N x N numpy array
         lower triangular cholesky factor of kernel matrix of evaluated input locations
+
     L: function: N vector -> scalar, log-likelihood function wrapper that encloses the data y and just takes f as input.
+
     Returns
     ----------
     f_dash:
@@ -60,20 +64,26 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, verbose=False):
     Function that generates samples from the latent variables of the GP specified
     by a probit likelihood, the kernel matrix whose cholesky is given, and the y
     values given.
+
     Parameters
     ----------
     K_chol: N x N numpy array
         lower triangular cholesky factor of kernel matrix of evaluated input locations
+
     y: N dimensional numpy array
         Array of y values associated with the x values used to create the kernel matrix
+
     n_samples: Integer
         Number of samples that should be returned
+
     burn_in: Integer
         Length of the burn-in period, i.e. extra iterations that are not returned in the final output.
+
     Returns
     ----------
     samples: n_samples x N numpy array
         Samples of latent variables
+
     """
 
     #Closure of type N vector -> scalar , computing probit log-likelihood for
