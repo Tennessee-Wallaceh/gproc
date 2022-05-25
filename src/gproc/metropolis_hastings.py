@@ -1,7 +1,10 @@
 import numpy as np
+import tqdm
 
 from scipy.stats import gamma, multivariate_normal
-from gproc.laplace import laplace_approximation_probit, chol_inverse
+from .laplace import laplace_approximation_probit, chol_inverse
+from .kernels import squared_exponential
+from .approx_marginal_is import importance_sampler
 
 def mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
     """
@@ -54,7 +57,7 @@ def mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
     inverse_gram = chol_inverse(gram)
     laplace_mean, df_ll, laplace_cov, objective_history, converged = laplace_approximation_probit(y, inverse_gram)
     
-    # Compute new marginal approximationdef mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
+    # Compute new marginal approximation
     marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp)
     
     # Compute MH log ratio
