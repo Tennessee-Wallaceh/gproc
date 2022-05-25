@@ -1,0 +1,50 @@
+name: Sphinx + Deploy
+
+on:
+  push:
+    branches:
+      - main
+        
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up Conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-activate-base: true
+        activate-environment: ""
+
+    - name: Package install
+      shell: bash  
+      run: |
+        conda env create --file ENV.yml
+        conda init && source ~/.bashrc && conda activate gproc && pip install .
+
+    # Build has to re-write _static to static for compatibility with GH pages
+    - name: Build
+      run: |
+        conda init && 
+        source ~/.bashrc && 
+        conda activate gproc && 
+        cd docs && 
+        make html &&
+        cd _build/html &&
+        sed -i 's/_static/static/g' index.html &&
+        mv _static/ static/
+
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@v4.3.3
+      with:
+        branch: documentation # The branch the action should deploy to.
+        folder: docs/_build/html # The folder the action should deploy.
