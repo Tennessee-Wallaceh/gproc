@@ -112,6 +112,9 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
 
     laplace_cov: N x N numpy array
     
+    df_ll: num_observations x 1 numpy array
+        the gradient of the log-likelihood wrt each :math:`f_i`
+        
     kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
     
     pred_samples: float
@@ -128,9 +131,6 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
     
     predictive_y: M numpy vector
         averaged prediction
-        
-    df_ll: num_observations x 1 numpy array
-        the gradient of the log-likelihood wrt each :math:`f_i`
     """
     
     new_cross_gram = kernel_fcn(new_x, x, **kernel_params)
