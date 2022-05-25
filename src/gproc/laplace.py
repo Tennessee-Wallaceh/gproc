@@ -4,6 +4,8 @@ from scipy.stats import norm
 from scipy.linalg import cho_factor, cho_solve
 import numpy as np
 
+from .kernels import squared_exponential 
+
 JITTER = 1e-5 # Add so-called jitter for stability of inversion
 
 def chol_inverse(symmetric_x):
@@ -91,3 +93,53 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
     objective_history = objective_history[:i] # Slice down to the used iterations
 
     return proposed_f, df_ll, laplace_cov, objective_history, converged
+
+def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_ll,  kernel_fcn=squared_exponential, kernel_params = {}, pred_samples = 1000):
+    """
+    Make predictions using the laplace approximation to the posterior over the latent funcitons.
+
+    Parameters
+    ----------
+    new_x: M x D numpy array
+    
+    x: N x D numpy array
+    
+    gram: N x N numpy array
+    
+    inverse_gram: N x N numpy array
+    
+    laplace_mean: N numpy vector
+
+    laplace_cov: N x N numpy array
+    
+    kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
+    
+    pred_samples: float
+        number of samples to generate from the predictive distribution corresponding to the laplace approximation
+        to the latent function posterior
+    
+    Returns
+    ----------
+    predictive_mean: M numpy vector
+        mean of predictive distribution
+    
+    predictive_cov: M x M numpy array
+        covariance of predictive distribution
+    
+    predictive_y: M numpy vector
+        averaged prediction
+        
+    df_ll: num_observations x 1 numpy array
+        the gradient of the log-likelihood wrt each :math:`f_i`
+    """
+    
+    new_cross_gram = kernel_fcn(new_x, x, **kernel_params)
+    new_gram = kernel_fcn(new_x, new_x, **kernel_params)
+
+    inverse = np.linalg.inv(np.diag(1 / df_ll) + gram)
+
+    predictive_mean = new_cross_gram.dot(inverse_gram).dot(laplace_mean)
+    predictive_cov = new_gram - new_cross_gram.dot(inverse).dot(new_cross_gram.T)
+    predictive_y = np.mean(norm.cdf(np.random.multivariate_normal(predictive_mean, predictive_cov, pred_samples)), axis=0)
+    
+    return predictive_y, predictive_mean, predictive_cov
