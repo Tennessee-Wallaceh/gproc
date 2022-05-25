@@ -1,5 +1,7 @@
-from scipy.linalg import cho_factor, cho_solve
 import numpy as np
+
+from scipy.linalg import cho_factor, cho_solve
+from scipy.stats import norm
 
 from .kernels import *
 from .laplace import chol_inverse 
