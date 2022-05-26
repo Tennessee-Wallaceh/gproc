@@ -43,7 +43,7 @@ def mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
     """
         
     # Draw kernel parameters from proposal distribution
-    th_new = np.random.multivariate_normal(th_old, cov, 1)[0]
+    th_new = np.random.multivariate_normal(th_old, cov, 1).squeeze() # Remove axes of length 1
 
     # Reparameterise old and new kernel parameters
     l_old = np.exp(th_old[0])
