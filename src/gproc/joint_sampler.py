@@ -3,6 +3,7 @@ from .elliptic import ess_samples_probit
 from .approx_marginal_is import importance_sampler
 from .kernels import *
 from .metropolis_hastings import mh_step
+from tqdm import tqdm
 
 def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, verbose = True):
     """
