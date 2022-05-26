@@ -1,10 +1,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include "normal.h"
+
+
 
 namespace py = pybind11;
 
-py::array_t<double> double_numpy_2d(py::array_t<double> input_arr){
-    
+py::array_t<double> ess_step(py::array_t<double> input_arr){
+
     //Gets a buffer_info struct that summarises the data
     py::buffer_info buf_info = input_arr.request();
 
