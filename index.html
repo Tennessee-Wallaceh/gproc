@@ -83,6 +83,36 @@ Only valid for symmetric x.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="gproc.laplace.laplace_predict">
+<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">laplace_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_cov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_ll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn=&lt;function</span> <span class="pre">squared_exponential&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_samples=1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.laplace_predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make predictions using the laplace approximation to the posterior over the latent funcitons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_x</strong> (<em>M x D numpy array</em>) – </p></li>
+<li><p><strong>x</strong> (<em>N x D numpy array</em>) – </p></li>
+<li><p><strong>gram</strong> (<em>N x N numpy array</em>) – </p></li>
+<li><p><strong>inverse_gram</strong> (<em>N x N numpy array</em>) – </p></li>
+<li><p><strong>laplace_mean</strong> (<em>N numpy vector</em>) – </p></li>
+<li><p><strong>laplace_cov</strong> (<em>N x N numpy array</em>) – </p></li>
+<li><p><strong>df_ll</strong> (<em>num_observations x 1 numpy array</em>) – the gradient of the log-likelihood wrt each <span class="math notranslate nohighlight">\(f_i\)</span></p></li>
+<li><p><strong>kernel_fcn</strong> (<em>function: N x D numpy array</em><em>, </em><em>N x D numpy array</em><em>, </em><em>dictionary -&gt; N x N numpy array</em>) – </p></li>
+<li><p><strong>pred_samples</strong> (<em>float</em>) – number of samples to generate from the predictive distribution corresponding to the laplace approximation
+to the latent function posterior</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>predictive_mean</strong> (<em>M numpy vector</em>) – mean of predictive distribution</p></li>
+<li><p><strong>predictive_cov</strong> (<em>M x M numpy array</em>) – covariance of predictive distribution</p></li>
+<li><p><strong>predictive_y</strong> (<em>M numpy vector</em>) – averaged prediction</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 <span class="target" id="module-gproc.generative"></span><p>Functions for generating example classification problems.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.generative.sample_at_x">
