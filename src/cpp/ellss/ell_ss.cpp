@@ -11,7 +11,7 @@ double probit_L(py::array_t<double> f, py::array_t<double> y){
 
     double total = 0;
     for (int i=0; i < N; i++){
-        total += logcdf(y.at(i)*y.at(i));
+        total += logcdf(f.at(i)*y.at(i));
     }
 
     return total;
@@ -45,7 +45,7 @@ void slice_sample(py::array_t<double> f_dash, py::array_t<double> f, py::array_t
           f_dash.mutable_at(i) = f.at(i)*cos(angle) + nu.at(i)*sin(angle);
         }
 
-        if (probit_L(f, y) > log_y){ valid_sample_found = true;}
+        if (probit_L(f_dash, y) > log_y){ valid_sample_found = true;}
 
         else{
           if (angle < 0){
@@ -54,10 +54,10 @@ void slice_sample(py::array_t<double> f_dash, py::array_t<double> f, py::array_t
           else{
             bracket_max = angle;
           }
+          std::uniform_real_distribution<double> distribution(bracket_min , bracket_max);
+          angle = distribution(generator);
         }
 
-        std::uniform_real_distribution<double> distribution(bracket_min , bracket_max);
-        angle = distribution(generator);
     }
 }
 
