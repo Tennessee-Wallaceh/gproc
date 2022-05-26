@@ -1,12 +1,12 @@
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 from scipy.stats import gamma, multivariate_normal
-from .laplace import laplace_approximation_probit, chol_inverse
-from .kernels import squared_exponential
+from .laplace import laplace_approximation_probit
+from .kernels import squared_exponential, chol_inverse
 from .approx_marginal_is import importance_sampler
 
-def mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
+def mh_step1(y, x, th_old, marg_old, cov, N_imp = 100):
     """
     Performs one transition of the Pseudo-Marginal Metropolis Hastings algorithm.
 
@@ -77,7 +77,7 @@ def mh_step(y, x, th_old, marg_old, cov, N_imp = 100):
         return th_old, marg_old, move
     
     
-def mh(iters, y, x, th_0, marg_0, cov, N_imp = 100, verbose = False):
+def mh1(iters, y, x, th_0, marg_0, cov, N_imp = 100, verbose = False):
     """
     Function that generates samples from the posterior distribution over
     kernel parameters.
@@ -130,7 +130,7 @@ def mh(iters, y, x, th_0, marg_0, cov, N_imp = 100, verbose = False):
     marg_arr[0] = marg_0
     
     for i in tqdm(range(iters), disable=not(verbose)):
-        th_arr[i + 1], marg_arr[i + 1], move_arr[i] = mh_step(y, x, th_arr[i, :], marg_arr[i], cov = cov, N_imp = N_imp)
+        th_arr[i + 1], marg_arr[i + 1], move_arr[i] = mh_step1(y, x, th_arr[i, :], marg_arr[i], cov = cov, N_imp = N_imp)
     
     acc_rate = move_arr.mean()
     return th_arr, marg_arr, acc_rate
