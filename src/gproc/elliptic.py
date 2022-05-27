@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from tqdm import tqdm
 
-def ess_step(f,K_chol,L):
+def ess_step(f, K_chol, L):
     """
     Performs one transition of the Elliptic Slice Sampling algorithm.
     See http://proceedings.mlr.press/v9/murray10a/murray10a.pdf for details
@@ -24,10 +24,7 @@ def ess_step(f,K_chol,L):
     """
 
     #Auxilliary variate - specifies ellipse
-    nu = (
-          K_chol @
-          np.random.multivariate_normal(np.zeros(K_chol.shape[0]), np.eye(K_chol.shape[0]))
-          ).T
+    nu = (K_chol @ np.random.multivariate_normal(np.zeros(K_chol.shape[0]), np.eye(K_chol.shape[0]))).T
 
     #Log-likelihood threshold for slice sampling
     u = np.random.uniform(0,1)
@@ -38,7 +35,6 @@ def ess_step(f,K_chol,L):
 
     #Define initial slice sampling bracket
     bracket = [angle - 2*np.pi , angle]
-
 
     #Repeat until f that fits log-likelihood threshold is sampled
     valid_sample_found = False
@@ -63,7 +59,7 @@ def ess_step(f,K_chol,L):
     return f_dash
 
 
-def ess_samples_probit(K_chol, y, n_samples, burn_in):
+def ess_samples_probit(K_chol, y, n_samples, burn_in, verbose=False):
     """
     Function that generates samples from the latent variables of the GP specified
     by a probit likelihood, the kernel matrix whose cholesky is given, and the y
@@ -97,7 +93,7 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in):
 
     burn_and_samples = np.zeros((burn_in + n_samples , K_chol.shape[0]))
 
-    for i in tqdm(range(1,burn_in + n_samples)):
+    for i in tqdm(range(1,burn_in + n_samples), disable=not(verbose)):
         #if i%100 == 0:
             #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
         burn_and_samples[i,:] = ess_step(burn_and_samples[i-1,:], K_chol, probit_L)

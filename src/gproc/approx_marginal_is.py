@@ -1,5 +1,7 @@
-from scipy.linalg import cho_factor, cho_solve
 import numpy as np
+
+from scipy.linalg import cho_factor, cho_solve
+from scipy.stats import norm
 
 from .kernels import *
 from .laplace import chol_inverse 
@@ -9,14 +11,37 @@ JITTER = 1e-5 # Add so-called jitter for stability of inversion
 def importance_sampler(y, x, q_mean, q_cov, N_imp, kernel_fcn=squared_exponential, kernel_params={}):
     """
     Implementation of eq 25 that approximates the marginal density p(y|th) on the log scale
+
+    Parameters
+    ----------
+    iters: float
+        number of iterations of the Metropolis Hastings algorithm
+        
+    y: N dimensional numpy vector
+        responses
     
-    :param y: num_observations x 1 numpy array containing 1 or -1
-    :param x, N x d matrix of input locations
-    :param q_mean: num_observations x 1 numpy array, mean of normal approximation to posterior over latents
-    :param q_cov: num_observations x num_observations numpy array, covariance matrix of normal approximation to posterior over latents
-    :param N_imp: float, number of inmportance samples to use
+    x: N x D dimensional numpy array
+        covariates
+
+    q_mean: N vector
+        mean of normal approximation to posterior over latents
+
+    q_cov N x N numpy array
+        covariance matrix of normal approximation to posterior over latents
+        
+    cov: numpy array
+        covariance matrix for use in the proposal distribution
+        
+    N_imp: float
+        number of importance samples to use in marginal approximation
     
-    :returns approximate marginal density, float
+    verbose: boolean
+        flag to produce loading bar
+
+    Returns
+    ----------
+    approximate marginal density, float
+    
     """
     # Get gram matrix
     gram = kernel_fcn(x, x, **kernel_params)
