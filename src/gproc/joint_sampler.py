@@ -33,6 +33,9 @@ def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_ac
     cov: numpy array
         covariance matrix for use in the proposal distribution
         
+    cov_scale: float
+        multiplicative scaling for the covariance matrix
+        
     target_acc_rate: float
         target acceptance rate
         
@@ -57,13 +60,22 @@ def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_ac
         contains the latent function samples
         
     th_arr: numpy array
-        contains the kernel parmams chains move history
+        contains the chains move history
     
     marg_arr: numpy array
         contains the history of marginal approximations
     
-    acc_rate: float
-        acceptance rate of moves
+    move_arr: numpy array
+        contains the history of moves
+        
+    acc_rate_hist: numpy array
+        contains the history of acceptance rates
+        
+    cov_scale_hist: numpy array
+        contains the history of covariance scales
+        
+    inverse_gram_arr: numpy array
+        contains the history of inverse gram matrices
     """
     
     # Create array to hold samples and move history

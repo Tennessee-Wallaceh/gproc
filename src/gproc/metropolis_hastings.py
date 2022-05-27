@@ -43,6 +43,9 @@ def mh_step(y, x, Kernel, th_old, marg_old, cov, N_imp = 100):
     
     move: boolean
         flag indicating whether or not we moved
+        
+    inverse_gram: numpy array
+        inverse gram matrix corresponding to new chain state
     """  
     # Constrain the old parameters
     th_old_constrained = Kernel.constrain_params(th_old)
@@ -107,6 +110,15 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
     cov: numpy array
         covariance matrix for use in the proposal distribution
         
+    cov_scale: float
+        multiplicative scaling for the covariance matrix
+    
+    target_acc_rate: float
+        target acceptance rate
+        
+    scale_iters: float
+        number of iterations per check for acceptance rate auto-tuning
+        
     N_imp: float
         number of importance samples to use in marginal approximation
     
@@ -121,15 +133,24 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
     marg_arr: numpy array
         contains the history of marginal approximations
     
-    acc_rate: float
-        acceptance rate of moves
+    move_arr: numpy array
+        contains the history of moves
+        
+    acc_rate_hist: numpy array
+        contains the history of acceptance rates
+        
+    cov_scale_hist: numpy array
+        contains the history of covariance scales
+        
+    inverse_gram_arr: numpy array
+        contains the history of inverse gram matrices
     """
     
     # Create array to hold samples and move history
     th_arr = np.zeros((iters + 1, th_0.shape[0]))
     marg_arr = np.zeros(iters + 1)
     move_arr = np.zeros(iters)
-    inverse_gram_arr = np.zeros((iters, y.shape[0], y.shape[0]))
+    inverse_gram_arr = np.zeros((iters + 1, y.shape[0], y.shape[0]))
     
     acc_rate_hist = np.zeros(int(iters/scale_iters))
     cov_scale_hist = np.zeros(int(iters/scale_iters))
@@ -139,9 +160,16 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
     th_arr[0, :] = th_0
     marg_arr[0] = marg_0
     
+    # Work out intitial inverse gram array
+    th_0_constrained = Kernel.constrain_params(th_0)
+    kernel0 = Kernel(*th_0_constrained)
+    gram0 = kernel0.make_gram(x, x)
+    inverse_gram0 = chol_inverse(gram0)
+    inverse_gram_arr[0, :, :] = inverse_gram0
+    
     for i in tqdm(range(iters), disable=not(verbose)):
-        th_arr[i + 1, :], marg_arr[i + 1], move_arr[i], inverse_gram_arr[i, :, :] = mh_step(y, x, Kernel, th_arr[i, :], marg_arr[i], cov = cov_scale*cov, N_imp = N_imp)
-        
+        th_arr[i + 1, :], marg_arr[i + 1], move_arr[i], inverse_gram_arr[i + 1, :, :] = mh_step(y, x, Kernel, th_arr[i, :], marg_arr[i], cov = cov_scale*cov, N_imp = N_imp)
+            
         # Auto-tuning
         if (i != 0) & (i%scale_iters == 0):
             
@@ -155,5 +183,10 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
                 cov_scale -= 0.025 * (iters - i)/iters
             
             cov_scale_hist[int(i/scale_iters)] = cov_scale
+    
+    # Fix the inverse gram array history using the move history
+    for i in range(iters):
+        if not move_arr[i]:
+            inverse_gram_arr[i + 1, : ,:] = inverse_gram_arr[i, : ,:]
             
     return th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr
