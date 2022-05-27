@@ -25,6 +25,9 @@ Additionally, we need to add a build step to our `setup.py` file, which will bui
 For more details look at https://pybind11.readthedocs.io/en/latest/basics.html .
 Static configuration is managed in `setup.cfg`.
 
+## Data
+The data folder for the reported experiments, if required, can be downloaded from https://drive.google.com/drive/folders/17rLJQekKVYesQjRptC9g2GDKa5yv7qV2?usp=sharing . The experiment script may need to be edited to point at the data folder.
+
 ## Documentation
 
 Documented in NumPy style.
