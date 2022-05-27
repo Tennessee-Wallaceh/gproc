@@ -1,7 +1,24 @@
 import numpy as np
-import pystan as stan
+import stan_jupyter as stan
 import matplotlib.pyplot as plt
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+blr_model = """
+data {
+  int<lower=0> n; // number of observations
+  int<lower=0> d; // number of predictors
+  array[n] int<lower=0,upper=1> y; // outputs
+  matrix[n,d] x; // inputs
+}
+parameters {
+  vector[d] theta; // auxiliary parameter
+}
+model {
+  theta ~ normal(0, 1);
+  vector[n] p = x * theta;
+  y ~ bernoulli_logit(p);
+}
+"""
 
 def stanvert(x, y):
     """
