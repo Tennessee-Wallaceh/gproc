@@ -36,24 +36,6 @@
 <span id="welcome-to-gproc-s-documentation"></span><h1>Welcome to gproc’s documentation!<a class="headerlink" href="#module-gproc.laplace" title="Permalink to this headline">¶</a></h1>
 <p>Provides functions for performing Laplace approximations to GP classification posteriors.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="gproc.laplace.chol_inverse">
-<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">chol_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.chol_inverse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
-Only valid for symmetric x.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>symmetric_x</strong> (<em>num_observations x num_observations numpy array</em>) – no symmetry checks are performed</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>num_observations x num_observations numpy array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="gproc.laplace.laplace_approximation_probit">
 <span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">laplace_approximation_probit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observed_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.laplace_approximation_probit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the laplace approximation to the latent function implied by the model:</p>
@@ -141,23 +123,19 @@ Allows arbitrary kernel function and likelihood.</p>
 
 <span class="target" id="module-gproc.kernels"></span><p>A number of python kernels, as defined in <a class="reference external" href="https://www.cs.toronto.edu/~duvenaud/cookbook/">https://www.cs.toronto.edu/~duvenaud/cookbook/</a></p>
 <dl class="py function">
-<dt class="sig sig-object py" id="gproc.kernels.add">
-<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.add" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add together an arbitrary number of kernels.</p>
+<dt class="sig sig-object py" id="gproc.kernels.chol_inverse">
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">chol_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.chol_inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
+Only valid for symmetric x.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
-<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
-<li><p><strong>kernels</strong> (<em>iterable</em><em>(</em><em>(</em><em>kernel_fnc</em><em>, </em><em>kernel_parameters</em><em>)</em><em>, </em><em>...</em><em>)</em>) – A number of kernel function and parameter tuples.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>symmetric_x</strong> (<em>num_observations x num_observations numpy array</em>) – no symmetry checks are performed</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j) = \sum_{l=1}^{L}k_l(x_i, x_j)\)</span>,
-for L kernels.</p>
+<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>N x M matrix,</p>
+<dd class="field-odd"><p>num_observations x num_observations numpy array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -188,7 +166,7 @@ Bayesian linear regression.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.kernels.locally_periodic">
-<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">locally_periodic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.locally_periodic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">locally_periodic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale_sqe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscale_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.locally_periodic" title="Permalink to this definition">¶</a></dt>
 <dd><p>A squared exponential kernel multiplied by a periodic kernel. Allows one to model periodic functions
 which can vary slowly over time.</p>
 <dl class="field-list simple">
@@ -203,28 +181,6 @@ which can vary slowly over time.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j)\)</span></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>N x M matrix,</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gproc.kernels.multiply">
-<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">multiply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.multiply" title="Permalink to this definition">¶</a></dt>
-<dd><p>Multiply together an arbitrary number of kernels.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x_1</strong> (<em>N x D numpy array</em>) – </p></li>
-<li><p><strong>x_2</strong> (<em>M x D numpy array</em>) – </p></li>
-<li><p><strong>kernels</strong> (<em>iterable</em><em>(</em><em>(</em><em>kernel_fnc</em><em>, </em><em>kernel_parameters</em><em>)</em><em>, </em><em>...</em><em>)</em>) – A number of kernel function and parameter tuples.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>K</strong> – The corresponding kernel matrix <span class="math notranslate nohighlight">\(K_{ij} = k(x_i, x_j) = \prod_{l=1}^{L}k_l(x_i, x_j)\)</span>,
-for L kernels.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>N x M matrix,</p>
