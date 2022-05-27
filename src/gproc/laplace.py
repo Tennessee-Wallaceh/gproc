@@ -27,6 +27,13 @@ def chol_inverse(symmetric_x):
     chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
     return cho_solve(chol, np.eye(dim_1))
 
+# The loglikelihood differentiated w.r.t each f
+def ll_gradients(proposed_f, observed_y):
+    pdf_cdf_ratio = norm.pdf(proposed_f) / norm.cdf(observed_y * proposed_f)
+    df_ll = observed_y * pdf_cdf_ratio # N x 1
+    df_2_ll = -np.square(pdf_cdf_ratio) - proposed_f * df_ll  # N x 1
+    return df_ll, np.diag(df_2_ll)
+
 def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, tol=1e-5):
     """
     Computes the laplace approximation to the latent function implied by the model:
@@ -57,12 +64,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
     """
     num_observations = observed_y.shape[0]
 
-    # The loglikelihood differentiated w.r.t each f
-    def ll_gradients(proposed_f):
-        pdf_cdf_ratio = norm.pdf(proposed_f) / norm.cdf(observed_y * proposed_f)
-        df_ll = observed_y * pdf_cdf_ratio # N x 1
-        df_2_ll = -np.square(pdf_cdf_ratio) - proposed_f * df_ll  # N x 1
-        return df_ll, np.diag(df_2_ll)
+    _ll_gradients = lambda proposed_f: ll_gradients(proposed_f, observed_y)
 
     # The objective we are maximising log p(y | f) + log p(f | gram) + const
     def objective(proposed_f):
@@ -72,7 +74,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
 
     # Newton method update step (details in Rasmussen section 3.4)
     def update(proposed_f):
-        df_ll, hessian = ll_gradients(proposed_f)
+        df_ll, hessian = _ll_gradients(proposed_f)
         neg_hessian = -hessian
         laplace_cov = chol_inverse(inverse_gram + neg_hessian)
         return laplace_cov.dot(neg_hessian.dot(proposed_f) + df_ll), df_ll, laplace_cov
@@ -143,3 +145,34 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
     predictive_y = np.mean(norm.cdf(np.random.multivariate_normal(predictive_mean, predictive_cov, pred_samples)), axis=0)
     
     return predictive_y, predictive_mean, predictive_cov
+
+def approximate_marginal_likelihood(x, y, kernel_fcn):
+    """
+    Computes the approximate marginal likelihood.
+
+    Parameters
+    ----------
+    x: N x D numpy array
+    
+    y : num_observations x 1 numpy array
+        array containing 1 or -1, the observations
+    
+    kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
+
+    Returns
+    ----------
+    approx_ml: float
+        The approximate marginal likelihood for the provided kernel function
+    """
+    gram = kernel_fcn(x, x)
+    inverse_gram = chol_inverse(gram)
+    # Just want the first return value
+    laplace_mean = laplace_approximation_probit(y, inverse_gram)[0]
+    _, hessian = ll_gradients(laplace_mean, y)
+    root_w = np.sqrt(-hessian)
+    num_observations = x.shape[0]
+    return (
+        -0.5 * laplace_mean.dot(inverse_gram).dot(laplace_mean)
+        -0.5 * np.log(np.linalg.det(np.eye(num_observations) + root_w.dot(gram).dot(root_w)))
+        + np.sum(norm.logcdf(laplace_mean * y))
+    )
