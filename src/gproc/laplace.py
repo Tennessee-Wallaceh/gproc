@@ -1,31 +1,9 @@
 """Provides functions for performing Laplace approximations to GP classification posteriors."""
 
 from scipy.stats import norm
-from scipy.linalg import cho_factor, cho_solve
 import numpy as np
 
-from .kernels import squared_exponential 
-
-JITTER = 1e-5 # Add so-called jitter for stability of inversion
-
-def chol_inverse(symmetric_x):
-    """
-    Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
-    Only valid for symmetric x.
-
-    Parameters
-    ----------
-    symmetric_x: num_observations x num_observations numpy array
-        no symmetry checks are performed 
-
-    Returns
-    ----------
-    x_inv: num_observations x num_observations numpy array
-        :math:`x^{-1}`, the inverse of symmetric_x
-    """
-    dim_1 = symmetric_x.shape[0]
-    chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
-    return cho_solve(chol, np.eye(dim_1))
+from .kernels import squared_exponential, chol_inverse
 
 # The loglikelihood differentiated w.r.t each f
 def ll_gradients(proposed_f, observed_y):

@@ -4,8 +4,48 @@ A number of python kernels, as defined in https://www.cs.toronto.edu/~duvenaud/c
 
 import numpy as np
 from scipy.spatial.distance import cdist
+from scipy.stats import gamma, norm
+from scipy.linalg import cho_factor, cho_solve
 from functools import reduce
 
+JITTER = 1e-5 # Add so-called jitter for stability of inversion
+
+def chol_inverse(symmetric_x):
+    """
+    Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
+    Only valid for symmetric x.
+
+    Parameters
+    ----------
+    symmetric_x: num_observations x num_observations numpy array
+        no symmetry checks are performed 
+
+    Returns
+    ----------
+    x_inv: num_observations x num_observations numpy array
+        :math:`x^{-1}`, the inverse of symmetric_x
+    """
+    dim_1 = symmetric_x.shape[0]
+    chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
+    return cho_solve(chol, np.eye(dim_1))
+
+class BaseKernel:
+    def __init__(self):
+        pass
+
+    def make_gram(self, x_1, x_2):
+        raise NotImplementedError()
+        
+    def invert_gram(self):
+        raise NotImplementedError()
+        
+    @staticmethod
+    def constrain_params(self, unconstrained_param_array):
+        raise NotImplementedError()
+    @staticmethod
+    def prior_log_pdf(self, param_array):
+        raise NotImplementedError()
+        
 def squared_exponential(x_1, x_2, lengthscale=0.5, variance=1.0):
     """
     Also known as RBF.
@@ -30,6 +70,35 @@ def squared_exponential(x_1, x_2, lengthscale=0.5, variance=1.0):
     sq_diffs = cdist(x_1, x_2, metric ='sqeuclidean')
     return variance * np.exp(-0.5 * sq_diffs / lengthscale)
 
+class SquaredExponential(BaseKernel):
+    def __init__(self, lengthscale=0.5, variance=1.0):
+        self.lengthscale = lengthscale
+        self.variance = variance
+        self.param_dim = 2
+        super().__init__()
+    
+    def make_gram(self, x_1, x_2):
+        return squared_exponential(x_1, x_2, self.lengthscale, self.variance)
+    
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance])
+    
+    def update_params(self, params):
+        self.lengthscale = params[0]
+        self.variance = params[1]
+
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+    
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        return prior
+    
 def rational_quadratic(x_1, x_2, lengthscale=0.5, variance=1.0, weighting=1.0):
     """
     Rational Quadratic Kernel, equivalent to adding together many Squared Exponential kernels with different 
@@ -59,6 +128,39 @@ def rational_quadratic(x_1, x_2, lengthscale=0.5, variance=1.0, weighting=1.0):
     sq_diffs = cdist(x_1, x_2, metric = 'sqeuclidean')
     return variance * ( (1 + sq_diffs / 2*lengthscale * weighting) ** (-weighting) )
 
+class RationalQuadratic(BaseKernel):
+    def __init__(self, lengthscale=0.5, variance=1.0, weighting=1.0):
+        self.lengthscale = lengthscale
+        self.variance = variance
+        self.weighting = weighting
+        self.param_dim = 3
+        super().__init__()
+    
+    def make_gram(self, x_1, x_2):
+        return rational_quadratic(x_1, x_2, self.lengthscale, self.variance, self.weighting)
+    
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance, self.weighting])
+    
+    def update_params(self, params):
+        self.lengthscale = params[0]
+        self.variance = params[1]
+        self.weighting = params[2]
+
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+    
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
+    
+
 def periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
     """
     The periodic kernel allows one to model functions which repeat themselves exactly.
@@ -84,9 +186,42 @@ def periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
         The corresponding kernel matrix :math:`K_{ij} = k(x_i, x_j)`
     """
     diffs = cdist(x_1, x_2, metric = 'euclidean')
-    return variance * np.exp(-0.5 * np.sin(np.pi * diffs / period) / lengthscale)
+    return variance * np.exp(-2 * np.sin(np.pi * diffs / period)**2 / lengthscale)
+                      
+class Periodic(BaseKernel):
+    def __init__(self, lengthscale=0.5, variance=1.0, period=1.0):
+        self.lengthscale = lengthscale
+        self.variance = variance
+        self.period = period
+        self.param_dim = 3
+        super().__init__()
+    
+    def make_gram(self, x_1, x_2):
+        return periodic(x_1, x_2, self.lengthscale, self.variance, self.period)
+    
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance, self.period])
 
-def locally_periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
+    def update_params(self, params):
+        self.lengthscale = params[0]
+        self.variance = params[1]
+        self.period = params[2]
+    
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+        
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
+                             
+                  
+def locally_periodic(x_1, x_2, lengthscale_sqe=0.5, variance=1.0, lengthscale_p =0.5, period=1.0):
     """
     A squared exponential kernel multiplied by a periodic kernel. Allows one to model periodic functions
     which can vary slowly over time.
@@ -112,11 +247,49 @@ def locally_periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
         The corresponding kernel matrix :math:`K_{ij} = k(x_i, x_j)`
     """
     
-    return np.multiply(
-        squared_exponential(x_1, x_2, lengthscale, variance), 
-        periodic(x_1, x_2, lengthscale, variance, period)
-    )
+    diffs = cdist(x_1, x_2, metric = 'euclidean')
+    sq_diffs = cdist(x_1, x_2, metric = 'sqeuclidean')
+    
+    K_period = np.exp(-2 * np.sin(np.pi * diffs / period)**2 / lengthscale_p)
+    K_sqe = np.exp(-0.5 * sq_diffs / lengthscale_sqe)
+    return variance * np.multiply(K_period, K_sqe)
 
+class LocallyPeriodic(BaseKernel):
+    def __init__(self, lengthscale_sqe=0.5, variance=1.0, lengthscale_p =0.5, period=1.0):
+        self.lengthscale_sqe = lengthscale_sqe
+        self.variance = variance
+        self.lengthscale_p = lengthscale_p
+        self.period = period
+        self.param_dim = 4
+        super().__init__()
+    
+    def make_gram(self, x_1, x_2):
+        gram = locally_periodic(x_1, x_2, self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period)
+        return gram 
+
+    def get_params(self):
+        return np.array([self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period])
+    
+    def update_params(self, params):
+        self.lengthscale_sqe = params[0]
+        self.variance = params[1]
+        self.lengthscale_p = arams[2]
+        self.period = params[3]
+    
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+        
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
+                             
 def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
     """
     A linear kernel is a non-stationary kernel, which when used with a GP, is equivalent to
@@ -144,53 +317,128 @@ def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
     """
     return constant_variance + variance * np.dot(x_1 - offset, x_2.T - offset)
 
-def add(x_1, x_2, kernels):
-    """
-    Add together an arbitrary number of kernels.
+class Linear(BaseKernel):
+    def __init__(self, constant_variance=0.5, variance=1.0, offset=1.0):
+        self.constant_variance = constant_variance
+        self.variance = variance
+        self.offset = offset
+        self.param_dim = 3
+        super().__init__()
     
-    Parameters
-    ----------
-    x_1: N x D numpy array
+    def make_gram(self, x_1, x_2):
+        gram = linear(x_1, x_2, self.constant_variance, self.variance, self.offset)
+        return gram 
     
-    x_2: M x D numpy array
+    def get_params(self):
+        return np.array([self.constant_variance, self.variance, self.offset])
     
-    kernels: iterable((kernel_fnc, kernel_parameters), ...)
-        A number of kernel function and parameter tuples.
+    def update_params(self, params):
+        self.constant_variance = params[0]
+        self.variance = params[1]
+        self.offset = params[2]
+    
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.concatenate((np.exp(unconstrained_params[0:2]), unconstrained_params[2].reshape(-1)))
+        
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += norm.logpdf(constrained_params[2])
+        return prior
+    
 
-    Returns
-    ----------
-    K: N x M matrix,
-        The corresponding kernel matrix :math:`K_{ij} = k(x_i, x_j) = \sum_{l=1}^{L}k_l(x_i, x_j)`,
-        for L kernels.
-    """
-    return sum([
-        kernel(x_1, x_2, **kernel_kwargs)
-        for kernel, kernel_kwargs in kernels
-    ])
+                             
+# Use below additive and multiplicative kernels to create arbirary numbers of kernels from above building blocks
+                             
+class Additive(BaseKernel):
+    def __init__(self, kernels):
+        self.kernels = kernels
+        self.param_dim = sum(k.param_dim for k in self.kernels)
+        super().__init__()
+    
+    def make_gram(self, x_1, x_2):
+        grams = [k.make_gram(x_1, x_2) for k in self.kernels]
+        self.gram = sum(grams)
+        return self.gram
+    
+    def get_params(self):
+        params = np.zeros(0)
+        for k in self.kernels:
+            params = np.concatenate(params, k.get_params())
+            
+    def update_params(self, params):
+        dim_count = 0
+        for k in self.kernels:
+            k.update_params(params[dim_count:(dim_count + k.param_dim)])
+            dim_count += k.param_dim
+    
+    @staticmethod
+    def constrain_params(self, unconstrained_params):
+        #if unconstrained_params.shape[0] != self.param_dim:
+            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+            
+        constrained_params = np.zeros(0)
+        dim_count = 0
+        for k in self.kernels:
+            constrained_params = np.concatenate(
+                (constrained_params,
+                k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)]))
+                )
+            dim_count += k.param_dim
+        return constrained_params
+    
+    @staticmethod
+    def prior_log_pdf(self, constrained_params, d):
+        prior = 0
+        dim_count = 0
+        for k in self.kernels:
+            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            dim_count += k.param_dim
+        return prior
 
-def multiply(x_1, x_2, kernels):
-    """
-    Multiply together an arbitrary number of kernels.
+class Multiplicative(BaseKernel):
+    def __init__(self, kernels):
+        self.kernels = kernels
+        self.param_dim = sum(k.param_dim for k in self.kernels)
+        super().__init__()
     
-    Parameters
-    ----------
-    x_1: N x D numpy array
+    def make_gram(self, x_1, x_2):
+        grams = [k.make_gram(x_1, x_2) for k in self.kernels]
+        self.gram = reduce(np.multiply, grams)
+        return self.gram
     
-    x_2: M x D numpy array
+    def get_params(self):
+        params = np.zeros(0)
+        for k in self.kernels:
+            params = np.concatenate(params, k.get_params())
+            
+    def update_params(self, params):
+        dim_count = 0
+        for k in self.kernels:
+            k.update_params(params[dim_count:(dim_count + k.param_dim)])
+            dim_count += k.param_dim
     
-    kernels: iterable((kernel_fnc, kernel_parameters), ...)
-        A number of kernel function and parameter tuples.
-
-    Returns
-    ----------
-    K: N x M matrix,
-        The corresponding kernel matrix :math:`K_{ij} = k(x_i, x_j) = \prod_{l=1}^{L}k_l(x_i, x_j)`,
-        for L kernels.
-    """
+    @staticmethod
+    def constrain_params(self, unconstrained_params):
+        #if unconstrained_params.shape[0] != self.param_dim:
+            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+            
+        constrained_params = np.zeros(0)
+        dim_count = 0
+        for k in self.kernels:
+            constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
+            dim_count += k.param_dim
+        return constrained_params
     
-    grams = [
-        kernel(x_1, x_2, **kernel_kwargs) 
-        for kernel, kernel_kwargs in kernels
-    ]
-    
-    return reduce(np.multiply, grams)
+    @staticmethod
+    def prior_log_pdf(self, constrained_params, d):
+        prior = 0
+        dim_count = 0
+        for k in self.kernels:
+            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            dim_count += k.param_dim
+        return prior
