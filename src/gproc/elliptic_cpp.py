@@ -3,7 +3,7 @@ from scipy.stats import norm
 from tqdm import tqdm
 from gproc.ellss import slice_sample
 
-def ess_step(f,K_chol,y):
+def ess_step_cpp(f,K_chol,y):
     """
     Performs one transition of the Elliptic Slice Sampling algorithm.
     See http://proceedings.mlr.press/v9/murray10a/murray10a.pdf for details
@@ -49,28 +49,8 @@ def ess_step(f,K_chol,y):
     f_dash = np.zeros(f.shape)
     slice_sample(f_dash, f, y, nu, bracket[0], bracket[1], log_y)
     return f_dash
-    """
-    while not valid_sample_found:
-        #New sample
-        f_dash = f * np.cos(angle) + nu * np.sin(angle)
 
-        #Check if valid
-        if L(f_dash) > log_y:
-            valid_sample_found = True
-
-        #Else shrink bracket and choose new angle
-        #Shrinking does nothing on first iteration but code is cleaner this way
-        else:
-            shrunk_side = int(angle >= 0) #0 or 1
-            bracket[shrunk_side] = angle
-
-            angle = np.random.uniform(*bracket)
-
-    return f_dash
-    """
-
-
-def ess_samples_probit(K_chol, y, n_samples, burn_in):
+def ess_samples_probit_cpp(K_chol, y, n_samples, burn_in):
     """
     Function that generates samples from the latent variables of the GP specified
     by a probit likelihood, the kernel matrix whose cholesky is given, and the y
@@ -102,6 +82,6 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in):
     for i in tqdm(range(1,burn_in + n_samples)):
         #if i%100 == 0:
             #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
-        burn_and_samples[i,:] = ess_step(burn_and_samples[i-1,:], K_chol, y)
+        burn_and_samples[i,:] = ess_step_cpp(burn_and_samples[i-1,:], K_chol, y)
 
     return burn_and_samples[burn_in:,:]
