@@ -5,7 +5,14 @@ from .kernels import *
 from .metropolis_hastings import mh
 from tqdm import tqdm
 
-def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25, scale_iters=25, N_imp=64, hyper_burn_in=100, ess_burn_in=25, verbose = True):
+def joint_sampler(iters,
+                  y, x,
+                  Kernel,
+                  th_0, marg_0,
+                  cov, cov_scale=1,
+                  target_acc_rate=0.25, scale_iters=25, N_imp=64,
+                  hyper_burn_in=100, ess_burn_in=25,
+                  verbose = True):
     """
     Function that jointly samples from the posterior distribution over
     kernel parameters and the latent functions.
@@ -88,10 +95,18 @@ def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_ac
     th_arr[0, :] = th_0
     marg_arr[0] = marg_0
     
-    print('Sampling hyperparameters')
-    th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr = mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale, target_acc_rate, scale_iters, N_imp, verbose)
+    if verbose:
+        print('Sampling hyperparameters')
+    th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr = mh(iters,
+                                                                                     y, x,
+                                                                                     Kernel,
+                                                                                     th_0, marg_0,
+                                                                                     cov, cov_scale,
+                                                                                     target_acc_rate, scale_iters, N_imp,
+                                                                                     verbose)
     
-    print('Burning in proposal latent function for ELL-SS algorithm')
+    if verbose:
+        print('Burning in proposal latent function for ELL-SS algorithm')
     # Constrain the parameters of the chain state after burn-in
     th_constrained = Kernel.constrain_params(th_arr[hyper_burn_in, :])
         
@@ -101,9 +116,12 @@ def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_ac
         
     # Sample once from the latent function, with significant burn-in
     K_chol = np.linalg.cholesky(gram+ 1e-05 * np.eye(gram.shape[0]))
-    f_arr[hyper_burn_in - 1, :] = ess_samples_probit(K_chol, y, 1, 500, verbose = False)
+    f_arr[hyper_burn_in - 1, :] = ess_samples_probit(K_chol, y,
+                                                     n_samples = 1, burn_in = 500,
+                                                     verbose = False)
      
-    print('Sampling latent functions')
+    if verbose:
+        print('Sampling latent functions')
     for i in tqdm(range(hyper_burn_in, iters), disable=not(verbose)):
         # Constrain the parameters of the current chain state
         th_constrained = Kernel.constrain_params(th_arr[i, :])
@@ -114,7 +132,11 @@ def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_ac
         
         # Sample once from the latent function
         K_chol = np.linalg.cholesky(gram+ 1e-05 * np.eye(gram.shape[0]))
-        f_arr[i, :] = ess_samples_probit(K_chol, y, 1, ess_burn_in, f_arr[i - 1, :], verbose = False)
+        f_arr[i, :] = ess_samples_probit(K_chol, y,
+                                         n_samples = 1,
+                                         burn_in = ess_burn_in,
+                                         initial_f = f_arr[i - 1, :],
+                                         verbose = False)
     
     acc_rate = move_arr.mean()
     return f_arr[hyper_burn_in:, :], th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr

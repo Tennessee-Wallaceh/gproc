@@ -38,10 +38,11 @@ class BaseKernel:
         
     def invert_gram(self):
         raise NotImplementedError()
-    
+        
+    @staticmethod
     def constrain_params(self, unconstrained_param_array):
         raise NotImplementedError()
-
+    @staticmethod
     def prior_log_pdf(self, param_array):
         raise NotImplementedError()
         
@@ -383,7 +384,10 @@ class Additive(BaseKernel):
         constrained_params = np.zeros(0)
         dim_count = 0
         for k in self.kernels:
-            constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
+            constrained_params = np.concatenate(
+                (constrained_params,
+                k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)]))
+                )
             dim_count += k.param_dim
         return constrained_params
     
