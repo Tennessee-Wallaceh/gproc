@@ -2,10 +2,10 @@ import numpy as np
 from .elliptic import ess_samples_probit
 from .approx_marginal_is import importance_sampler
 from .kernels import *
-from .metropolis_hastings import mh_step
+from .metropolis_hastings import mh
 from tqdm import tqdm
 
-def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, verbose = True):
+def joint_sampler(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25, scale_iters=25, N_imp=64, hyper_burn_in=100, ess_burn_in=25, verbose = True):
     """
     Function that jointly samples from the posterior distribution over
     kernel parameters and the latent functions.
@@ -20,6 +20,9 @@ def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, ver
     
     x: N x D dimensional numpy array
         covariates
+        
+    Kernel: class
+        kernel generating class
 
     th_0: numpy vector
         initial kernel parameters
@@ -30,10 +33,19 @@ def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, ver
     cov: numpy array
         covariance matrix for use in the proposal distribution
         
+    target_acc_rate: float
+        target acceptance rate
+        
+    scale_iters: float
+        number of iterations per check for acceptance rate auto-tuning
+        
     N_imp: float
         number of importance samples to use in marginal approximation
     
-    burn_in: float
+    hyper_burn_in: float
+        number of burn in samples to use in MH hyperparameter sampling
+        
+    ess_burn_in: float
         number of burn in samples to use in ELL-SS
         
     verbose: boolean
@@ -59,19 +71,38 @@ def joint_sampler(iters, y, x, th_0, marg_0, cov, N_imp = 100, burn_in = 10, ver
     th_arr = np.zeros((iters + 1, th_0.shape[0]))
     marg_arr = np.zeros(iters + 1)
     move_arr = np.zeros(iters)
-    
+
     # Add initialisation
     th_arr[0, :] = th_0
     marg_arr[0] = marg_0
     
-    for i in tqdm(range(iters), disable=not(verbose)):
-        # Get latent function sample corresponding to current kernel params
-        K = squared_exponential(x, x, lengthscale = np.exp(th_arr[i, 0]), variance = np.exp(th_arr[i, 1]))
-        K_chol = np.linalg.cholesky(K + 1e-05 * np.eye(K.shape[0]))
-        f_arr[i, :] = ess_samples_probit(K_chol, y, 1, burn_in, verbose = False)
+    print('Sampling hyperparameters')
+    th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr = mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale, target_acc_rate, scale_iters, N_imp, verbose)
+    
+    print('Burning in proposal latent function for ELL-SS algorithm')
+    # Constrain the parameters of the chain state after burn-in
+    th_constrained = Kernel.constrain_params(th_arr[hyper_burn_in, :])
         
-        # Get new kernel params
-        th_arr[i + 1, :], marg_arr[i + 1], move_arr[i] = mh_step(y, x, th_arr[i, :], marg_arr[i], cov = cov, N_imp = N_imp)
+    # Make kernel gram matrix with current constrained parameters
+    kernel = Kernel(*th_constrained)
+    gram = kernel.make_gram(x, x)
+        
+    # Sample once from the latent function, with significant burn-in
+    K_chol = np.linalg.cholesky(gram+ 1e-05 * np.eye(gram.shape[0]))
+    f_arr[hyper_burn_in - 1, :] = ess_samples_probit(K_chol, y, 1, 500, verbose = False)
+     
+    print('Sampling latent functions')
+    for i in tqdm(range(hyper_burn_in, iters), disable=not(verbose)):
+        # Constrain the parameters of the current chain state
+        th_constrained = Kernel.constrain_params(th_arr[i, :])
+        
+        # Make kernel gram matrix with current constrained parameters
+        kernel = Kernel(*th_constrained)
+        gram = kernel.make_gram(x, x)
+        
+        # Sample once from the latent function
+        K_chol = np.linalg.cholesky(gram+ 1e-05 * np.eye(gram.shape[0]))
+        f_arr[i, :] = ess_samples_probit(K_chol, y, 1, ess_burn_in, f_arr[i - 1, :], verbose = False)
     
     acc_rate = move_arr.mean()
-    return f_arr, th_arr, marg_arr, acc_rate
+    return f_arr[hyper_burn_in:, :], th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr

@@ -59,7 +59,7 @@ def ess_step(f, K_chol, L):
     return f_dash
 
 
-def ess_samples_probit(K_chol, y, n_samples, burn_in, verbose=False):
+def ess_samples_probit(K_chol, y, n_samples, burn_in, f0=None, verbose=False):
     """
     Function that generates samples from the latent variables of the GP specified
     by a probit likelihood, the kernel matrix whose cholesky is given, and the y
@@ -85,17 +85,20 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, verbose=False):
         Samples of latent variables
 
     """
-
+    if f0 is None:
+        f0 = np.zeros(y.shape[0])
+    
     #Closure of type N vector -> scalar , computing probit log-likelihood for
     #y given f, but as a function of f.
     def probit_L(f):
         return np.sum(norm.logcdf(y*f))
 
-    burn_and_samples = np.zeros((burn_in + n_samples , K_chol.shape[0]))
+    burn_and_samples = np.zeros((burn_in + n_samples + 1 , K_chol.shape[0]))
+    burn_and_samples[0, :] = f0
 
-    for i in tqdm(range(1,burn_in + n_samples), disable=not(verbose)):
+    for i in tqdm(range(1, burn_in + n_samples + 1), disable=not(verbose)):
         #if i%100 == 0:
             #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
         burn_and_samples[i,:] = ess_step(burn_and_samples[i-1,:], K_chol, probit_L)
 
-    return burn_and_samples[burn_in:,:]
+    return burn_and_samples[(burn_in + 1):,:]

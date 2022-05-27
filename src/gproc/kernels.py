@@ -77,30 +77,26 @@ class SquaredExponential(BaseKernel):
         super().__init__()
     
     def make_gram(self, x_1, x_2):
-        self.gram = squared_exponential(x_1, x_2, self.lengthscale, self.variance)
-        return self.gram 
+        return squared_exponential(x_1, x_2, self.lengthscale, self.variance)
     
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-    
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-        self.constrained_params = np.exp(unconstrained_params)
-        return self.constrained_params
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance])
     
     def update_params(self, params):
         self.lengthscale = params[0]
         self.variance = params[1]
-        
-    def get_params(self):
-        return np.array([self.lengthscale, self.variance])
+
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
     
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
-        self.prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        return self.prior
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        return prior
     
 def rational_quadratic(x_1, x_2, lengthscale=0.5, variance=1.0, weighting=1.0):
     """
@@ -140,33 +136,28 @@ class RationalQuadratic(BaseKernel):
         super().__init__()
     
     def make_gram(self, x_1, x_2):
-        self.gram = rational_quadratic(x_1, x_2, self.lengthscale, self.variance, self.weighting)
-        return self.gram 
+        return rational_quadratic(x_1, x_2, self.lengthscale, self.variance, self.weighting)
     
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-    
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-        self.constrained_params = np.exp(unconstrained_params)
-        return self.constrained_params
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance, self.weighting])
     
     def update_params(self, params):
         self.lengthscale = params[0]
         self.variance = params[1]
         self.weighting = params[2]
-    
-    def get_params(self):
-        return np.array([self.lengthscale, self.variance, self.weighting])
-    
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
-        self.prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        self.prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
-        return self.prior
 
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+    
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
     
 
 def periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
@@ -205,32 +196,28 @@ class Periodic(BaseKernel):
         super().__init__()
     
     def make_gram(self, x_1, x_2):
-        self.gram = periodic(x_1, x_2, self.lengthscale, self.variance, self.period)
-        return self.gram 
+        return periodic(x_1, x_2, self.lengthscale, self.variance, self.period)
     
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-    
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-        self.constrained_params = np.exp(unconstrained_params)
-        return self.constrained_params
-    
+    def get_params(self):
+        return np.array([self.lengthscale, self.variance, self.period])
+
     def update_params(self, params):
         self.lengthscale = params[0]
         self.variance = params[1]
         self.period = params[2]
+    
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
         
-    def get_params(self):
-        return np.array([self.lengthscale, self.variance, self.period])
-
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
-        self.prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        self.prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
-        return self.prior
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
                              
                   
 def locally_periodic(x_1, x_2, lengthscale_sqe=0.5, variance=1.0, lengthscale_p =0.5, period=1.0):
@@ -276,35 +263,31 @@ class LocallyPeriodic(BaseKernel):
         super().__init__()
     
     def make_gram(self, x_1, x_2):
-        self.gram = locally_periodic(x_1, x_2, self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period)
-        return self.gram 
-    
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-    
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-        self.constrained_params = np.exp(unconstrained_params)
-        return self.constrained_params
+        gram = locally_periodic(x_1, x_2, self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period)
+        return gram 
+
+    def get_params(self):
+        return np.array([self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period])
     
     def update_params(self, params):
         self.lengthscale_sqe = params[0]
         self.variance = params[1]
         self.lengthscale_p = arams[2]
         self.period = params[3]
-        
-    def get_params(self):
-        return np.array([self.lengthscale_sqe, self.variance, self.lengthscale_p, self.period])
     
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
-        self.prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        self.prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
-        self.prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 1/0.00001) # uninformative prior
-        return self.prior
-                
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.exp(unconstrained_params)
+        
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        return prior
                              
 def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
     """
@@ -342,29 +325,30 @@ class Linear(BaseKernel):
         super().__init__()
     
     def make_gram(self, x_1, x_2):
-        self.gram = linear(x_1, x_2, self.constant_variance, self.variance, self.offset)
-        return self.gram 
+        gram = linear(x_1, x_2, self.constant_variance, self.variance, self.offset)
+        return gram 
     
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-    
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-        self.constrained_params = np.concatenate((np.exp(unconstrained_params[0:2]), unconstrained_params[2].reshape(-1)))
-        return self.constrained_params
+    def get_params(self):
+        return np.array([self.constant_variance, self.variance, self.offset])
     
     def update_params(self, params):
         self.constant_variance = params[0]
         self.variance = params[1]
         self.offset = params[2]
     
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        self.prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        self.prior += norm.logpdf(constrained_params[2]) # Standard Gaussian prior for offset
-        return self.prior
+    @staticmethod
+    def constrain_params(unconstrained_params):
+        # if unconstrained_params.shape[0] != self.param_dim:
+        #     raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+        return np.concatenate((np.exp(unconstrained_params[0:2]), unconstrained_params[2].reshape(-1)))
+        
+    @staticmethod
+    def prior_log_pdf(constrained_params, d):
+        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+        prior += norm.logpdf(constrained_params[2])
+        return prior
+    
 
                              
 # Use below additive and multiplicative kernels to create arbirary numbers of kernels from above building blocks
@@ -379,35 +363,38 @@ class Additive(BaseKernel):
         grams = [k.make_gram(x_1, x_2) for k in self.kernels]
         self.gram = sum(grams)
         return self.gram
-        
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
-
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-            
-        self.constrained_params = np.zeros(0)
-        dim_count = 0
-        for k in self.kernels:
-            self.constrained_params = np.concatenate((self.constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
-            dim_count += k.param_dim
-        return self.constrained_params
     
+    def get_params(self):
+        params = np.zeros(0)
+        for k in self.kernels:
+            params = np.concatenate(params, k.get_params())
+            
     def update_params(self, params):
         dim_count = 0
         for k in self.kernels:
             k.update_params(params[dim_count:(dim_count + k.param_dim)])
             dim_count += k.param_dim
-
-    def prior_log_pdf(self, constrained_params, d):
-        self.prior = 0
+    
+    @staticmethod
+    def constrain_params(self, unconstrained_params):
+        #if unconstrained_params.shape[0] != self.param_dim:
+            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+            
+        constrained_params = np.zeros(0)
         dim_count = 0
         for k in self.kernels:
-            self.prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
             dim_count += k.param_dim
-        return self.prior
+        return constrained_params
+    
+    @staticmethod
+    def prior_log_pdf(self, constrained_params, d):
+        prior = 0
+        dim_count = 0
+        for k in self.kernels:
+            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            dim_count += k.param_dim
+        return prior
 
 class Multiplicative(BaseKernel):
     def __init__(self, kernels):
@@ -419,32 +406,35 @@ class Multiplicative(BaseKernel):
         grams = [k.make_gram(x_1, x_2) for k in self.kernels]
         self.gram = reduce(np.multiply, grams)
         return self.gram
-        
-    def invert_gram(self):
-        self.inverse_gram = chol_inverse(self.gram)
-        return self.inverse_gram
     
-    def constrain_params(self, unconstrained_params):
-        if unconstrained_params.shape[0] != self.param_dim:
-            raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-            
-        self.constrained_params = np.zeros(0)
-        dim_count = 0
+    def get_params(self):
+        params = np.zeros(0)
         for k in self.kernels:
-            self.constrained_params = np.concatenate((self.constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
-            dim_count += k.param_dim
-        return self.constrained_params
-    
+            params = np.concatenate(params, k.get_params())
+            
     def update_params(self, params):
         dim_count = 0
         for k in self.kernels:
             k.update_params(params[dim_count:(dim_count + k.param_dim)])
             dim_count += k.param_dim
     
-        def prior_log_pdf(self, constrained_params, d):
-        self.prior = 0
+    @staticmethod
+    def constrain_params(self, unconstrained_params):
+        #if unconstrained_params.shape[0] != self.param_dim:
+            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+            
+        constrained_params = np.zeros(0)
         dim_count = 0
         for k in self.kernels:
-            self.prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
             dim_count += k.param_dim
-        return self.prior
+        return constrained_params
+    
+    @staticmethod
+    def prior_log_pdf(self, constrained_params, d):
+        prior = 0
+        dim_count = 0
+        for k in self.kernels:
+            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+            dim_count += k.param_dim
+        return prior
