@@ -50,7 +50,7 @@ def ess_step_cpp(f,K_chol,y):
     slice_sample(f_dash, f, y, nu, bracket[0], bracket[1], log_y)
     return f_dash
 
-def ess_samples_probit_cpp(K_chol, y, n_samples, burn_in):
+def ess_samples_probit_cpp(K_chol, y, n_samples, burn_in, initial_f=None, verbose=False):
     """
     Function that generates samples from the latent variables of the GP specified
     by a probit likelihood, the kernel matrix whose cholesky is given, and the y
@@ -77,11 +77,13 @@ def ess_samples_probit_cpp(K_chol, y, n_samples, burn_in):
 
     """
 
-    burn_and_samples = np.zeros((burn_in + n_samples , K_chol.shape[0]))
+    if initial_f is None:
+        initial_f = np.zeros(y.shape[0])
 
-    for i in tqdm(range(1,burn_in + n_samples)):
-        #if i%100 == 0:
-            #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
+    burn_and_samples = np.zeros((burn_in + n_samples + 1 , K_chol.shape[0]))
+    burn_and_samples[0, :] = initial_f
+
+    for i in tqdm(range(1,burn_in + n_samples + 1), disable=not(verbose)):
         burn_and_samples[i,:] = ess_step_cpp(burn_and_samples[i-1,:], K_chol, y)
 
-    return burn_and_samples[burn_in:,:]
+    return burn_and_samples[(burn_in + 1):,:]

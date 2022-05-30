@@ -78,7 +78,7 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, initial_f=None, verbose=Fa
 
     burn_in: Integer
         Length of the burn-in period, i.e. extra iterations that are not returned in the final output.
-        
+
     initial_f: N numpy vector
         the initial state of latent function chain
 
@@ -90,7 +90,7 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, initial_f=None, verbose=Fa
     """
     if initial_f is None:
         initial_f = np.zeros(y.shape[0])
-    
+
     #Closure of type N vector -> scalar , computing probit log-likelihood for
     #y given f, but as a function of f.
     def probit_L(f):
@@ -100,8 +100,6 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, initial_f=None, verbose=Fa
     burn_and_samples[0, :] = initial_f
 
     for i in tqdm(range(1, burn_in + n_samples + 1), disable=not(verbose)):
-        #if i%100 == 0:
-            #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
         burn_and_samples[i,:] = ess_step(burn_and_samples[i-1,:], K_chol, probit_L)
 
     return burn_and_samples[(burn_in + 1):,:]
