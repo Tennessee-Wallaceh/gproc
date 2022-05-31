@@ -29,7 +29,7 @@ def run_pipeline(fit_classifier, train_x, train_y, test_x, test_y):
     cap_metrics: numpy array
         A variety of abstention based metrics
     """
-    predict = fit_classifier(train_x, train_y)
+    predict, _ = fit_classifier(train_x, train_y)
     prob_y_positive = predict(test_x)
     predicted_y = np.ones_like(prob_y_positive)
     predicted_y[prob_y_positive < 0.5] = -1
