@@ -10,7 +10,10 @@ from functools import reduce
 
 JITTER = 1e-5 # Add so-called jitter for stability of inversion
 
-def chol_inverse(symmetric_x):
+class InvertError(Exception):
+    pass
+
+def chol_inverse(symmetric_x, JITTER=1e-5):
     """
     Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
     Only valid for symmetric x.
@@ -26,8 +29,17 @@ def chol_inverse(symmetric_x):
         :math:`x^{-1}`, the inverse of symmetric_x
     """
     dim_1 = symmetric_x.shape[0]
-    chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
-    return cho_solve(chol, np.eye(dim_1))
+    counter = 0
+    while True:
+        try:
+            counter +=1
+            chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
+            return cho_solve(chol, np.eye(dim_1))
+        except Exception:
+            if counter > 5:
+                raise InvertError('Attempted to invert matrix more than 5 times')
+            JITTER = JITTER * 1.1
+            pass
 
 class BaseKernel:
     def __init__(self):
