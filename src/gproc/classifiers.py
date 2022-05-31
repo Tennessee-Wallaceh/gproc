@@ -1,3 +1,8 @@
+"""
+Provides "fit_classifier" style functions, which take training data and 
+return functions which make predictions for new x values.
+"""
+
 from functools import reduce
 import numpy as np
 from tqdm import tqdm
