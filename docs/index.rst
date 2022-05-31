@@ -18,6 +18,12 @@ Welcome to gproc's documentation!
 .. automodule:: gproc.classifiers
     :members:
 
+.. automodule:: gproc.run_pipeline
+    :members:
+
+.. automodule:: gproc.cross_validation
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
