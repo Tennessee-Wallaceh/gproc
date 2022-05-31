@@ -3,12 +3,12 @@ from scipy.stats import norm
 
 def pm_predict(new_x, X, y, Kernel_class, f_arr, th_arr, inverse_gram_arr):
     """
-    Also known as RBF.
+    Computes the prediction for a single new inputted location via the predictive distribution.
 
     Parameters
     ----------
     new_x: Size D numpy vector
-        The new input point point to be predicted
+        The new input point to be predicted
 
     X: P x D numpy array
         The P training inputs of dimension D
@@ -34,13 +34,13 @@ def pm_predict(new_x, X, y, Kernel_class, f_arr, th_arr, inverse_gram_arr):
     pred: float
         The probability of the inputted point being in the positive class
     """
-    
+
     N = f_arr.shape[0]
 
     mean_stars = np.empty(N)
     var_stars = np.empty(N)
 
-    new_x_arr = new_x.reshape(1,new_x.shape[0])
+    new_x_arr = new_x.reshape(1,-1)
 
     for i in range(N):
         constrained_params = Kernel_class.constrain_params(th_arr[i,:])
