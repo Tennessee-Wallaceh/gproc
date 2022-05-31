@@ -4,7 +4,7 @@ from gproc.metrics import abstention_metrics
 
 RHOS = np.linspace(0, 0.5, 1000)
 
-def run_pipeline(fit_classifier, train_x, train_y, test_x, test_y):
+def run_pipeline(fit_classifier, train_x, train_y, test_x, test_y, rhos=RHOS):
     """
     Fits a classifier on train data and compute test statistics.
     
@@ -34,6 +34,6 @@ def run_pipeline(fit_classifier, train_x, train_y, test_x, test_y):
     predicted_y = np.ones_like(prob_y_positive)
     predicted_y[prob_y_positive < 0.5] = -1
 
-    cap_metrics = abstention_metrics(prob_y_positive, predicted_y, test_y, RHOS)
+    cap_metrics = abstention_metrics(prob_y_positive, predicted_y, test_y, rhos)
 
     return cap_metrics

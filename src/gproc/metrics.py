@@ -95,7 +95,7 @@ def max_threshold(prob_ests):
         
     return max_thresh
 
-def inspect_metrics(accuracy_ax, auc_ax, cap_metrics, label=None):
+def inspect_metrics(accuracy_ax, auc_ax, cap_metrics, label=None, plot_kwargs={}):
     """
     Produces plots of the capacity accuracy, capacity F score and capacity AUC scores vs
     the degree of abstention
@@ -103,14 +103,14 @@ def inspect_metrics(accuracy_ax, auc_ax, cap_metrics, label=None):
     :param cap_metrics, M x 4 matrix, matrix holding abstention degree, capacity classification
                                         accuracy capacity F score, capacity AUC score
     """
-    accuracy_ax.plot(cap_metrics[:, 0], cap_metrics[:, 1], label =label)
+    accuracy_ax.plot(cap_metrics[:, 0], cap_metrics[:, 1], label=label, **plot_kwargs)
     accuracy_ax.set_xlabel('Degree of Abstention', fontsize = 15)
     accuracy_ax.set_ylabel('Capacity Classification Accuracy', fontsize = 15)
     accuracy_ax.set_ylim([-0.05, 1.05])
     accuracy_ax.set_xlim([0.0, 1.])
     accuracy_ax.legend()
     
-    auc_ax.plot(cap_metrics[:, 0], cap_metrics[:, 3], label =label)
+    auc_ax.plot(cap_metrics[:, 0], cap_metrics[:, 3], label=label, **plot_kwargs)
     auc_ax.set_xlabel('Degree of Abstention', fontsize = 15)
     auc_ax.set_ylabel('Capacity AUC Score', fontsize = 15)
     auc_ax.set_ylim([-0.05, 1.05])
