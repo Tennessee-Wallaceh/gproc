@@ -5,7 +5,7 @@ A number of python kernels, as defined in https://www.cs.toronto.edu/~duvenaud/c
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import gamma, norm
-from scipy.linalg import cho_factor, cho_solve
+from scipy.linalg import cho_factor, cho_solve, LinAlgError
 from functools import reduce
 
 JITTER = 1e-5 # Add so-called jitter for stability of inversion
@@ -34,8 +34,8 @@ def chol_inverse(symmetric_x, JITTER=1e-5):
         try:
             counter +=1
             chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
-            return cho_solve(chol, np.eye(dim_1))
-        except Exception:
+            return cho_solve(chol, np.eye(dim_1)), chol
+        except LinAlgError:
             if counter > 5:
                 raise InvertError('Attempted to invert matrix more than 5 times')
             JITTER = JITTER * 1.1

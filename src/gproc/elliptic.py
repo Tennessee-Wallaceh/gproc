@@ -100,8 +100,6 @@ def ess_samples_probit(K_chol, y, n_samples, burn_in, initial_f=None, verbose=Fa
     burn_and_samples[0, :] = initial_f
 
     for i in tqdm(range(1, burn_in + n_samples + 1), disable=not(verbose)):
-        #if i%100 == 0:
-            #print(f"~~~Sample {i} out of {burn_in + n_samples}~~~")
         burn_and_samples[i,:] = ess_step(burn_and_samples[i-1,:], K_chol, probit_L)
 
     return burn_and_samples[(burn_in + 1):,:]

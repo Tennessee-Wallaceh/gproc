@@ -59,7 +59,7 @@ def mh_step(y, x, Kernel, th_old, marg_old, cov, N_imp = 100):
                              
     # Create the new kernel gram matrix, and make new Laplace approximation
     gram = new_kernel.make_gram(x, x)
-    inverse_gram = chol_inverse(gram)
+    inverse_gram, _ = chol_inverse(gram)
     laplace_mean, df_ll, laplace_cov, objective_history, converged = laplace_approximation_probit(y, inverse_gram)
     
     # Compute new marginal approximation
@@ -164,7 +164,7 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
     th_0_constrained = Kernel.constrain_params(th_0)
     kernel0 = Kernel(*th_0_constrained)
     gram0 = kernel0.make_gram(x, x)
-    inverse_gram0 = chol_inverse(gram0)
+    inverse_gram0, _ = chol_inverse(gram0)
     inverse_gram_arr[0, :, :] = inverse_gram0
     
     for i in tqdm(range(iters), disable=not(verbose)):

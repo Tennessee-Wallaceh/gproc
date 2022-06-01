@@ -8,7 +8,7 @@ from .laplace import chol_inverse
 
 JITTER = 1e-5 # Add so-called jitter for stability of inversion
 
-def importance_sampler(y, x, q_mean, q_cov, N_imp, kernel_fcn=squared_exponential, kernel_params={}):
+def importance_sampler(y, x, q_mean, q_cov, N_imp, Kernel):
     """
     Implementation of eq 25 that approximates the marginal density p(y|th) on the log scale
 
@@ -35,8 +35,8 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, kernel_fcn=squared_exponentia
     N_imp: float
         number of importance samples to use in marginal approximation
     
-    verbose: boolean
-        flag to produce loading bar
+    Kernel: class
+        kernel generating class
 
     Returns
     ----------
@@ -44,13 +44,12 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, kernel_fcn=squared_exponentia
     
     """
     # Get gram matrix
-    gram = kernel_fcn(x, x, **kernel_params)
+    gram = Kernel.make_gram(x, x)
     
-    # Inverse of gram matrix 
-    inverse_gram = chol_inverse(gram)
+    # Inverse of gram matrix and cholesky dcomp
+    inverse_gram, chol_gram = chol_inverse(gram)
     
     # Work out log-determinant of gram matrix
-    chol_gram = cho_factor(gram + JITTER * np.eye(gram.shape[0]), lower=True, check_finite=True)[0]
     log_gram_det = 2 * np.sum(np.log(np.diagonal(chol_gram)))
     
     # Get the log determinant and inverse of the approximate covariance matrix
