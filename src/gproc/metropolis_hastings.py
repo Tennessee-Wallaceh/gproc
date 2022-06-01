@@ -63,7 +63,7 @@ def mh_step(y, x, Kernel, th_old, marg_old, cov, N_imp = 100):
     laplace_mean, df_ll, laplace_cov, objective_history, converged = laplace_approximation_probit(y, inverse_gram)
     
     # Compute new marginal approximation
-    marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp)
+    marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp, gram)
     
     # Compute MH log ratio
     # Dimension of covariates for Gamma prior hyperameters in MH ratio
@@ -181,6 +181,9 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
                 cov_scale += 0.025 * (iters - i)/iters
             else:
                 cov_scale -= 0.025 * (iters - i)/iters
+            
+            if cov_scale < 0:
+                cov_scale = cov_scale_hist[int(i/scale_iters) - 1] 
             
             cov_scale_hist[int(i/scale_iters)] = cov_scale
     
