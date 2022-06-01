@@ -27,6 +27,9 @@ def chol_inverse(symmetric_x, jitter=JITTER):
     ----------
     x_inv: num_observations x num_observations numpy array
         :math:`x^{-1}`, the inverse of symmetric_x
+        
+    chol: num_observations x num_observations numpy array
+        matrix with lower triangular cholesky factor inside
     """
     dim_1 = symmetric_x.shape[0]
     counter = 0
@@ -34,7 +37,7 @@ def chol_inverse(symmetric_x, jitter=JITTER):
         try:
             counter +=1
             chol = cho_factor(symmetric_x + jitter * np.eye(dim_1), lower=True, check_finite=True)
-            return cho_solve(chol, np.eye(dim_1)), chol
+            return cho_solve(chol, np.eye(dim_1)), chol[0]
         except LinAlgError:
             if counter > 5:
                 raise InvertError('Attempted to invert matrix more than 5 times')
