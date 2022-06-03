@@ -4,9 +4,27 @@ from scipy.linalg import cho_factor, cho_solve
 from scipy.stats import norm
 
 from .kernels import *
-from .laplace import chol_inverse 
+from .laplace import chol_inverse
 
-JITTER = 1e-5 # Add so-called jitter for stability of inversion
+def _chol_mvn_logpdf(f_samples, covariance):
+    """
+    Implements a multivariate normal log pdf using a cholesky decomposition.
+    A D-dimensional multivariate normal.
+
+    Parameters
+    ----------
+    f_sample: N x D
+        0 mean examples, points at which to compute the log cdf
+
+    covariance: D x D
+        Pre-inverted covariance
+    """
+    inverse_cov, chol_cov = chol_inverse(covariance)
+    log_cov_det = 2 * np.sum(np.log(np.diagonal(chol_cov)))
+    return -0.5 * (
+        log_cov_det +
+        np.sum(f_samples.dot(inverse_cov) * f_samples, axis=1)
+    )
 
 def importance_sampler(y, x, q_mean, q_cov, N_imp, gram):
     """
@@ -42,34 +60,15 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, gram):
     ----------
     approximate marginal density, float
     
-    """    
-    # Inverse of gram matrix and cholesky decomp
-    inverse_gram, chol_gram = chol_inverse(gram)
-    
-    # Work out log-determinant of gram matrix
-    log_gram_det = 2 * np.sum(np.log(np.diagonal(chol_gram)))
+    """ 
+    q_log_pdf = lambda f_samples: _chol_mvn_logpdf(f_samples - q_mean, q_cov)
+    log_prior = lambda f_samples:  _chol_mvn_logpdf(f_samples, gram)
+    log_likelihood = lambda f_samples: norm.logcdf(y * f_samples).sum(axis=1)
 
-    # Get the log determinant and inverse of the approximate covariance matrix
-    inverse_q_cov, chol_q_cov = chol_inverse(q_cov)
-    log_q_det = 2 * np.sum(np.log(np.diagonal(chol_q_cov)))
-    
-    # Define log joint function
-    def log_joint(y, f, inverse_gram, log_gram_det):
-        log_likelihood = np.sum(norm.logcdf(y * f))
-        log_prior = -0.5 * ( y.shape[0] * np.log(2 * np.pi) + log_gram_det + f.dot(inverse_gram).dot(f) )
-        return log_likelihood + log_prior
-
-    # Define log density of Normal approximation q
-    def q_log_pdf(f, inverse_q_cov, log_q_det):
-        return -0.5 * ( f.shape[0] * np.log(2 * np.pi) + log_q_det + f.dot(inverse_q_cov).dot(f) )
-
-    # Sample latent functions from the normal approximation to full posterior
     f_samples = np.random.multivariate_normal(q_mean, q_cov, N_imp)
-    
-    # Importance sum
-    marg_approx = 0
-    for i in range(N_imp):
-        
-        marg_approx += log_joint(y, f_samples[i, :], inverse_gram, log_gram_det) - q_log_pdf(f_samples[i, :], inverse_q_cov, log_q_det)
-    
-    return marg_approx/N_imp
+
+    return np.exp(
+        log_likelihood(f_samples) +
+        log_prior(f_samples) -
+        q_log_pdf(f_samples)
+    ).mean()
