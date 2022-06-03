@@ -4,7 +4,6 @@ from scipy.linalg import cho_factor, cho_solve
 from scipy.stats import norm
 
 from .kernels import *
-from .laplace import chol_inverse
 
 def _chol_mvn_logpdf(f_samples, covariance):
     """
