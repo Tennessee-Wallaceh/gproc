@@ -14,7 +14,7 @@ from gproc.joint_sampler import joint_sampler
 from gproc.approx_marginal_is import importance_sampler
 from gproc.pseudo_marginal_prediction import pm_predict
 
-def simple_laplace(x_train, y_train, kernel_fcn):
+def simple_laplace(x_train, y_train, kernel):
     """
     Runs a laplace approximation with a fixed kernel and provides a function for predicting new x.
 
@@ -25,8 +25,9 @@ def simple_laplace(x_train, y_train, kernel_fcn):
     y_train : num_observations x 1 numpy array
         array containing 1 or -1, the observations
     
-    kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
-
+    kernel: object
+        instance of kernel generating class
+        
     Returns
     ----------
     predict: function
@@ -36,7 +37,7 @@ def simple_laplace(x_train, y_train, kernel_fcn):
         Dictionary of arbitrary info on the specific fit
     """
     fit_info = {}
-    train_gram = kernel_fcn(x_train, x_train)
+    train_gram = kernel.make_gram(x_train, x_train)
     inverse_train_gram, _ = chol_inverse(train_gram)
 
     laplace_mean, df_ll, laplace_cov, _, converged = laplace_approximation_probit(y_train, inverse_train_gram)
@@ -52,13 +53,13 @@ def simple_laplace(x_train, y_train, kernel_fcn):
             laplace_mean,
             laplace_cov,
             df_ll,
-            kernel_fcn = kernel_fcn,
+            kernel = kernel,
         )
         return predictive_y
 
     return predict, fit_info
 
-def gridsearch_laplace(x_train, y_train, kernel_fcn, search_space):
+def gridsearch_laplace(x_train, y_train, Kernel, search_space):
     """
     Searches over potential hyper parameters and chooses the ones which maxmimise the approximate
     marginal log likelihood.
@@ -71,7 +72,8 @@ def gridsearch_laplace(x_train, y_train, kernel_fcn, search_space):
     y_train : num_observations x 1 numpy array
         array containing 1 or -1, the observations
     
-    kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
+    Kernel: class
+        kernel generating class
 
     search_space: tuple
         Each element is an array corresponding to hyperparameter values to test.
@@ -98,16 +100,18 @@ def gridsearch_laplace(x_train, y_train, kernel_fcn, search_space):
     ))).squeeze().T
 
     for param_ix, test_param_set in enumerate(test_params):
+        test_kernel = Kernel(*test_param_set)
         marginal_lls[param_ix] = approximate_marginal_likelihood(
             x_train,
             y_train,
-            lambda x_1, x_2: kernel_fcn(x_1, x_2, *test_param_set)
+            test_kernel,
         )
 
     # Get best Marginal LL and compute final gram
     best_ix = np.argmax(marginal_lls)
     best_params = test_params[best_ix]
-    train_gram = kernel_fcn(x_train, x_train, *best_params)
+    best_kernel = Kernel(*best_params)
+    train_gram = best_kernel.make_gram(x_train, x_train)
     inverse_train_gram, _ = chol_inverse(train_gram)
     laplace_mean, df_ll, laplace_cov, _, converged = laplace_approximation_probit(y_train, inverse_train_gram)
     assert converged, 'Laplace approximation did not converge!'
@@ -121,7 +125,7 @@ def gridsearch_laplace(x_train, y_train, kernel_fcn, search_space):
             laplace_mean,
             laplace_cov,
             df_ll,
-            kernel_fcn=lambda x_1, x_2: kernel_fcn(x_1, x_2, *best_params),
+            best_kernel,
         )
         return predictive_y
 
