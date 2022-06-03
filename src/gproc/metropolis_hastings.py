@@ -59,11 +59,11 @@ def mh_step(y, x, Kernel, th_old, marg_old, cov, N_imp = 100):
                              
     # Create the new kernel gram matrix, and make new Laplace approximation
     gram = new_kernel.make_gram(x, x)
-    inverse_gram = chol_inverse(gram)
+    inverse_gram, _ = chol_inverse(gram)
     laplace_mean, df_ll, laplace_cov, objective_history, converged = laplace_approximation_probit(y, inverse_gram)
     
     # Compute new marginal approximation
-    marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp)
+    marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp, gram)
     
     # Compute MH log ratio
     # Dimension of covariates for Gamma prior hyperameters in MH ratio
@@ -164,7 +164,7 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
     th_0_constrained = Kernel.constrain_params(th_0)
     kernel0 = Kernel(*th_0_constrained)
     gram0 = kernel0.make_gram(x, x)
-    inverse_gram0 = chol_inverse(gram0)
+    inverse_gram0, _ = chol_inverse(gram0)
     inverse_gram_arr[0, :, :] = inverse_gram0
     
     for i in tqdm(range(iters), disable=not(verbose)):
@@ -181,6 +181,9 @@ def mh(iters, y, x, Kernel, th_0, marg_0, cov, cov_scale=1, target_acc_rate=0.25
                 cov_scale += 0.025 * (iters - i)/iters
             else:
                 cov_scale -= 0.025 * (iters - i)/iters
+            
+            if cov_scale < 0:
+                cov_scale = cov_scale_hist[int(i/scale_iters) - 1] 
             
             cov_scale_hist[int(i/scale_iters)] = cov_scale
     

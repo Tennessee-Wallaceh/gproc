@@ -6,7 +6,7 @@ from scipy.stats import norm
 
 from .kernels import squared_exponential
 
-def sample_at_x(x, kernel_fcn=squared_exponential, kernel_params={}, likelihood=norm.cdf):
+def sample_at_x(x, Kernel, likelihood=norm.cdf):
     """
     Samples a class label at each provided input point according to the GP classification model.
     Allows arbitrary kernel function and likelihood.
@@ -37,7 +37,7 @@ def sample_at_x(x, kernel_fcn=squared_exponential, kernel_params={}, likelihood=
         The latent function value at each input point.
     """
     N = x.shape[0]
-    gram_matrix = kernel_fcn(x, x, **kernel_params)
+    gram_matrix = Kernel.make_gram(x, x)
     f = np.random.multivariate_normal(np.zeros(N), gram_matrix)
     prob_y = likelihood(f)
     y = np.random.binomial(1, p=prob_y) # 1 sample for each N of elements of prob_y

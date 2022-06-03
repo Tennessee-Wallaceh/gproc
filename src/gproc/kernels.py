@@ -5,12 +5,15 @@ A number of python kernels, as defined in https://www.cs.toronto.edu/~duvenaud/c
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import gamma, norm
-from scipy.linalg import cho_factor, cho_solve
+from scipy.linalg import cho_factor, cho_solve, LinAlgError
 from functools import reduce
 
 JITTER = 1e-5 # Add so-called jitter for stability of inversion
 
-def chol_inverse(symmetric_x):
+class InvertError(Exception):
+    pass
+
+def chol_inverse(symmetric_x, jitter=JITTER):
     """
     Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
     Only valid for symmetric x.
@@ -24,10 +27,22 @@ def chol_inverse(symmetric_x):
     ----------
     x_inv: num_observations x num_observations numpy array
         :math:`x^{-1}`, the inverse of symmetric_x
+        
+    chol: num_observations x num_observations numpy array
+        matrix with lower triangular cholesky factor inside
     """
     dim_1 = symmetric_x.shape[0]
-    chol = cho_factor(symmetric_x + JITTER * np.eye(dim_1), lower=True, check_finite=True)
-    return cho_solve(chol, np.eye(dim_1))
+    counter = 0
+    while True:
+        try:
+            counter +=1
+            chol = cho_factor(symmetric_x + jitter * np.eye(dim_1), lower=True, check_finite=True)
+            return cho_solve(chol, np.eye(dim_1)), chol[0]
+        except LinAlgError:
+            if counter > 5:
+                raise InvertError('Attempted to invert matrix more than 5 times')
+            jitter = jitter * 1.1
+            pass
 
 class BaseKernel:
     def __init__(self):
