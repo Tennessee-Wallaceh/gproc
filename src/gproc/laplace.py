@@ -52,7 +52,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
     def update(proposed_f):
         df_ll, hessian = ll_gradients(proposed_f)
         neg_hessian = -hessian
-        laplace_cov = chol_inverse(inverse_gram + neg_hessian)
+        laplace_cov, _ = chol_inverse(inverse_gram + neg_hessian)
         return laplace_cov.dot(neg_hessian.dot(proposed_f) + df_ll), df_ll, laplace_cov
 
     # Perform MAP of f using Newton method
