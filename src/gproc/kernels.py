@@ -90,10 +90,10 @@ def squared_exponential(x_1, x_2, lengthscale=0.5, variance=1.0):
     return variance * np.exp(-0.5 * sq_diffs / lengthscale)
 
 class SquaredExponential(BaseKernel):
+    param_dim = 2
     def __init__(self, lengthscale=0.5, variance=1.0):
         self.lengthscale = lengthscale
         self.variance = variance
-        self.param_dim = 2
         super().__init__()
     
     def make_gram(self, x_1, x_2):
@@ -148,11 +148,11 @@ def rational_quadratic(x_1, x_2, lengthscale=0.5, variance=1.0, weighting=1.0):
     return variance * ( (1 + sq_diffs / 2*lengthscale * weighting) ** (-weighting) )
 
 class RationalQuadratic(BaseKernel):
+    param_dim = 3
     def __init__(self, lengthscale=0.5, variance=1.0, weighting=1.0):
         self.lengthscale = lengthscale
         self.variance = variance
         self.weighting = weighting
-        self.param_dim = 3
         super().__init__()
     
     def make_gram(self, x_1, x_2):
@@ -208,11 +208,11 @@ def periodic(x_1, x_2, lengthscale=0.5, variance=1.0, period=1.0):
     return variance * np.exp(-2 * np.sin(np.pi * diffs / period)**2 / lengthscale)
                       
 class Periodic(BaseKernel):
+    param_dim = 3
     def __init__(self, lengthscale=0.5, variance=1.0, period=1.0):
         self.lengthscale = lengthscale
         self.variance = variance
         self.period = period
-        self.param_dim = 3
         super().__init__()
     
     def make_gram(self, x_1, x_2):
@@ -274,12 +274,12 @@ def locally_periodic(x_1, x_2, lengthscale_sqe=0.5, variance=1.0, lengthscale_p 
     return variance * np.multiply(K_period, K_sqe)
 
 class LocallyPeriodic(BaseKernel):
+    param_dim = 4
     def __init__(self, lengthscale_sqe=0.5, variance=1.0, lengthscale_p =0.5, period=1.0):
         self.lengthscale_sqe = lengthscale_sqe
         self.variance = variance
         self.lengthscale_p = lengthscale_p
         self.period = period
-        self.param_dim = 4
         super().__init__()
     
     def make_gram(self, x_1, x_2):
@@ -337,11 +337,11 @@ def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
     return constant_variance + variance * np.dot(x_1 - offset, x_2.T - offset)
 
 class Linear(BaseKernel):
+    param_dim = 3
     def __init__(self, constant_variance=0.5, variance=1.0, offset=1.0):
         self.constant_variance = constant_variance
         self.variance = variance
         self.offset = offset
-        self.param_dim = 3
         super().__init__()
     
     def make_gram(self, x_1, x_2):
@@ -372,92 +372,107 @@ class Linear(BaseKernel):
 
                              
 # Use below additive and multiplicative kernels to create arbirary numbers of kernels from above building blocks
-                             
-class Additive(BaseKernel):
-    def __init__(self, kernels):
-        self.kernels = kernels
-        self.param_dim = sum(k.param_dim for k in self.kernels)
-        super().__init__()
-    
-    def make_gram(self, x_1, x_2):
-        grams = [k.make_gram(x_1, x_2) for k in self.kernels]
-        self.gram = sum(grams)
-        return self.gram
-    
-    def get_params(self):
-        params = np.zeros(0)
-        for k in self.kernels:
-            params = np.concatenate(params, k.get_params())
-            
-    def update_params(self, params):
-        dim_count = 0
-        for k in self.kernels:
-            k.update_params(params[dim_count:(dim_count + k.param_dim)])
-            dim_count += k.param_dim
-    
-    @staticmethod
-    def constrain_params(self, unconstrained_params):
-        #if unconstrained_params.shape[0] != self.param_dim:
-            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-            
-        constrained_params = np.zeros(0)
-        dim_count = 0
-        for k in self.kernels:
-            constrained_params = np.concatenate(
-                (constrained_params,
-                k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)]))
-                )
-            dim_count += k.param_dim
-        return constrained_params
-    
-    @staticmethod
-    def prior_log_pdf(self, constrained_params, d):
-        prior = 0
-        dim_count = 0
-        for k in self.kernels:
-            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
-            dim_count += k.param_dim
-        return prior
+def add_kernels(Kernels):
+    # Function adds together a number of Kernel classes and returns 
+    # an appropriate class
+    class Additive(BaseKernel):
+        param_dim = sum(k.param_dim for k in Kernels)
+        def __init__(self, kernel_params):
+            self.kernel_classes = Kernels
+            self.kernels = [
+                Kernel(**kernel_params[i])
+                for i, Kernel in enumerate(self.kernel_classes)
+            ]
+            super().__init__()
+        
+        def make_gram(self, x_1, x_2):
+            grams = [k.make_gram(x_1, x_2) for k in self.kernels]
+            self.gram = sum(grams)
+            return self.gram
+        
+        def get_params(self):
+            params = np.zeros(0)
+            for k in self.kernels:
+                params = np.concatenate(params, k.get_params())
+                
+        def update_params(self, params):
+            dim_count = 0
+            for k in self.kernels:
+                k.update_params(params[dim_count:(dim_count + k.param_dim)])
+                dim_count += k.param_dim
+        
+        @staticmethod
+        def constrain_params(self, unconstrained_params):
+            #if unconstrained_params.shape[0] != self.param_dim:
+                #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+                
+            constrained_params = np.zeros(0)
+            dim_count = 0
+            for k in self.kernels:
+                constrained_params = np.concatenate(
+                    (constrained_params,
+                    k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)]))
+                    )
+                dim_count += k.param_dim
+            return constrained_params
+        
+        @staticmethod
+        def prior_log_pdf(self, constrained_params, d):
+            prior = 0
+            dim_count = 0
+            for k in self.kernels:
+                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+                dim_count += k.param_dim
+            return prior
 
-class Multiplicative(BaseKernel):
-    def __init__(self, kernels):
-        self.kernels = kernels
-        self.param_dim = sum(k.param_dim for k in self.kernels)
-        super().__init__()
-    
-    def make_gram(self, x_1, x_2):
-        grams = [k.make_gram(x_1, x_2) for k in self.kernels]
-        self.gram = reduce(np.multiply, grams)
-        return self.gram
-    
-    def get_params(self):
-        params = np.zeros(0)
-        for k in self.kernels:
-            params = np.concatenate(params, k.get_params())
-            
-    def update_params(self, params):
-        dim_count = 0
-        for k in self.kernels:
-            k.update_params(params[dim_count:(dim_count + k.param_dim)])
-            dim_count += k.param_dim
-    
-    @staticmethod
-    def constrain_params(self, unconstrained_params):
-        #if unconstrained_params.shape[0] != self.param_dim:
-            #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
-            
-        constrained_params = np.zeros(0)
-        dim_count = 0
-        for k in self.kernels:
-            constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
-            dim_count += k.param_dim
-        return constrained_params
-    
-    @staticmethod
-    def prior_log_pdf(self, constrained_params, d):
-        prior = 0
-        dim_count = 0
-        for k in self.kernels:
-            prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
-            dim_count += k.param_dim
-        return prior
+    return Additive
+
+def multiply_kernels(Kernels):
+    class Multiplicative(BaseKernel):
+        param_dim = sum(k.param_dim for k in Kernels)
+        def __init__(self, kernel_params):
+            self.kernel_classes = Kernels
+            self.kernels = [
+                Kernel(**kernel_params[i])
+                for i, Kernel in enumerate(self.kernel_classes)
+            ]
+            super().__init__()
+        
+        def make_gram(self, x_1, x_2):
+            grams = [k.make_gram(x_1, x_2) for k in self.kernels]
+            self.gram = reduce(np.multiply, grams)
+            return self.gram
+        
+        def get_params(self):
+            params = np.zeros(0)
+            for k in self.kernels:
+                params = np.concatenate(params, k.get_params())
+                
+        def update_params(self, params):
+            dim_count = 0
+            for k in self.kernels:
+                k.update_params(params[dim_count:(dim_count + k.param_dim)])
+                dim_count += k.param_dim
+        
+        @staticmethod
+        def constrain_params(self, unconstrained_params):
+            #if unconstrained_params.shape[0] != self.param_dim:
+                #raise AssertionError('Parameter array not the same size as kernel parameter dimension')
+                
+            constrained_params = np.zeros(0)
+            dim_count = 0
+            for k in self.kernels:
+                constrained_params = np.concatenate((constrained_params, k.constrain_params(unconstrained_params[dim_count:(dim_count + k.param_dim)])))
+                dim_count += k.param_dim
+            return constrained_params
+        
+        @staticmethod
+        def prior_log_pdf(self, constrained_params, d):
+            prior = 0
+            dim_count = 0
+            for k in self.kernels:
+                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+                dim_count += k.param_dim
+            return prior
+
+    return Multiplicative
