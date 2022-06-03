@@ -98,7 +98,7 @@ to the latent function posterior</p></li>
 <span class="target" id="module-gproc.generative"></span><p>Functions for generating example classification problems.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.generative.sample_at_x">
-<span class="sig-prename descclassname"><span class="pre">gproc.generative.</span></span><span class="sig-name descname"><span class="pre">sample_at_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn=&lt;function</span> <span class="pre">squared_exponential&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">likelihood=&lt;bound</span> <span class="pre">method</span> <span class="pre">rv_continuous.cdf</span> <span class="pre">of</span> <span class="pre">&lt;scipy.stats._continuous_distns.norm_gen</span> <span class="pre">object&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.generative.sample_at_x" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.generative.</span></span><span class="sig-name descname"><span class="pre">sample_at_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">likelihood=&lt;bound</span> <span class="pre">method</span> <span class="pre">rv_continuous.cdf</span> <span class="pre">of</span> <span class="pre">&lt;scipy.stats._continuous_distns.norm_gen</span> <span class="pre">object&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.generative.sample_at_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Samples a class label at each provided input point according to the GP classification model.
 Allows arbitrary kernel function and likelihood.</p>
 <dl class="field-list simple">
@@ -122,9 +122,14 @@ Allows arbitrary kernel function and likelihood.</p>
 </dd></dl>
 
 <span class="target" id="module-gproc.kernels"></span><p>A number of python kernels, as defined in <a class="reference external" href="https://www.cs.toronto.edu/~duvenaud/cookbook/">https://www.cs.toronto.edu/~duvenaud/cookbook/</a></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="gproc.kernels.InvertError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">InvertError</span></span><a class="headerlink" href="#gproc.kernels.InvertError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.kernels.chol_inverse">
-<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">chol_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.chol_inverse" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.kernels.</span></span><span class="sig-name descname"><span class="pre">chol_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.kernels.chol_inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
 Only valid for symmetric x.</p>
 <dl class="field-list simple">
@@ -132,10 +137,11 @@ Only valid for symmetric x.</p>
 <dd class="field-odd"><p><strong>symmetric_x</strong> (<em>num_observations x num_observations numpy array</em>) – no symmetry checks are performed</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>x_inv</strong> – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>num_observations x num_observations numpy array</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>x_inv</strong> (<em>num_observations x num_observations numpy array</em>) – <span class="math notranslate nohighlight">\(x^{-1}\)</span>, the inverse of symmetric_x</p></li>
+<li><p><strong>chol</strong> (<em>num_observations x num_observations numpy array</em>) – matrix with lower triangular cholesky factor inside</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
