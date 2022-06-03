@@ -37,7 +37,7 @@
 <p>Provides functions for performing Laplace approximations to GP classification posteriors.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.laplace.approximate_marginal_likelihood">
-<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">approximate_marginal_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.approximate_marginal_likelihood" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">approximate_marginal_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.approximate_marginal_likelihood" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the approximate marginal likelihood.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -88,7 +88,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.laplace.laplace_predict">
-<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">laplace_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_cov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_ll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn=&lt;function</span> <span class="pre">squared_exponential&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_samples=1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.laplace_predict" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.laplace.</span></span><span class="sig-name descname"><span class="pre">laplace_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_gram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laplace_cov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_ll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.laplace.laplace_predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make predictions using the laplace approximation to the posterior over the latent funcitons.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -100,7 +100,7 @@
 <li><p><strong>laplace_mean</strong> (<em>N numpy vector</em>) – </p></li>
 <li><p><strong>laplace_cov</strong> (<em>N x N numpy array</em>) – </p></li>
 <li><p><strong>df_ll</strong> (<em>num_observations x 1 numpy array</em>) – the gradient of the log-likelihood wrt each <span class="math notranslate nohighlight">\(f_i\)</span></p></li>
-<li><p><strong>kernel_fcn</strong> (<em>function: N x D numpy array</em><em>, </em><em>N x D numpy array</em><em>, </em><em>dictionary -&gt; N x N numpy array</em>) – </p></li>
+<li><p><strong>kernel</strong> (<em>object</em>) – instance of kernel generating class</p></li>
 <li><p><strong>pred_samples</strong> (<em>float</em>) – number of samples to generate from the predictive distribution corresponding to the laplace approximation
 to the latent function posterior</p></li>
 </ul>
@@ -336,7 +336,7 @@ Defines family of kernels</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.classifiers.gridsearch_laplace">
-<span class="sig-prename descclassname"><span class="pre">gproc.classifiers.</span></span><span class="sig-name descname"><span class="pre">gridsearch_laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.classifiers.gridsearch_laplace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.classifiers.</span></span><span class="sig-name descname"><span class="pre">gridsearch_laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.classifiers.gridsearch_laplace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Searches over potential hyper parameters and chooses the ones which maxmimise the approximate
 marginal log likelihood.
 Runs a laplace approximation with the best and provides a function for predicting new x.</p>
@@ -345,7 +345,7 @@ Runs a laplace approximation with the best and provides a function for predictin
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_train</strong> (<em>N x D numpy array</em>) – </p></li>
 <li><p><strong>y_train</strong> (<em>num_observations x 1 numpy array</em>) – array containing 1 or -1, the observations</p></li>
-<li><p><strong>kernel_fcn</strong> (<em>function: N x D numpy array</em><em>, </em><em>N x D numpy array</em><em>, </em><em>dictionary -&gt; N x N numpy array</em>) – </p></li>
+<li><p><strong>Kernel</strong> (<em>class</em>) – kernel generating class</p></li>
 <li><p><strong>search_space</strong> (<em>tuple</em>) – Each element is an array corresponding to hyperparameter values to test.
 Order must correspond to order in kernel_fcn execution.</p></li>
 </ul>
@@ -362,14 +362,14 @@ Order must correspond to order in kernel_fcn execution.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gproc.classifiers.simple_laplace">
-<span class="sig-prename descclassname"><span class="pre">gproc.classifiers.</span></span><span class="sig-name descname"><span class="pre">simple_laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_fcn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.classifiers.simple_laplace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gproc.classifiers.</span></span><span class="sig-name descname"><span class="pre">simple_laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gproc.classifiers.simple_laplace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs a laplace approximation with a fixed kernel and provides a function for predicting new x.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_train</strong> (<em>N x D numpy array</em>) – </p></li>
 <li><p><strong>y_train</strong> (<em>num_observations x 1 numpy array</em>) – array containing 1 or -1, the observations</p></li>
-<li><p><strong>kernel_fcn</strong> (<em>function: N x D numpy array</em><em>, </em><em>N x D numpy array</em><em>, </em><em>dictionary -&gt; N x N numpy array</em>) – </p></li>
+<li><p><strong>kernel</strong> (<em>object</em>) – instance of kernel generating class</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
