@@ -17,7 +17,6 @@ def _chol_mvn_logpdf(f_samples, covariance):
         0 mean examples, points at which to compute the log cdf
 
     covariance: D x D
-        Pre-inverted covariance
     """
     inverse_cov, chol_cov = chol_inverse(covariance)
     log_cov_det = 2 * np.sum(np.log(np.diagonal(chol_cov)))
@@ -71,4 +70,4 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, gram):
         log_likelihood(f_samples) +
         log_prior(f_samples) -
         q_log_pdf(f_samples)
-    ).mean()
+    ).mean().log()
