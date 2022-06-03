@@ -74,7 +74,7 @@ def laplace_approximation_probit(observed_y, inverse_gram, max_iterations=100, t
 
     return proposed_f, df_ll, laplace_cov, objective_history, converged
 
-def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_ll,  kernel_fcn=squared_exponential, kernel_params = {}, pred_samples = 1000):
+def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_ll,  kernel, pred_samples = 1000):
     """
     Make predictions using the laplace approximation to the posterior over the latent funcitons.
 
@@ -95,7 +95,8 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
     df_ll: num_observations x 1 numpy array
         the gradient of the log-likelihood wrt each :math:`f_i`
         
-    kernel_fcn: function: N x D numpy array, N x D numpy array, dictionary -> N x N numpy array
+    kernel: object
+        instance of kernel generating class
     
     pred_samples: float
         number of samples to generate from the predictive distribution corresponding to the laplace approximation
@@ -113,8 +114,8 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
         averaged prediction
     """
     
-    new_cross_gram = kernel_fcn(new_x, x, **kernel_params)
-    new_gram = kernel_fcn(new_x, new_x, **kernel_params)
+    new_cross_gram = kernel.make_gram(new_x, x)
+    new_gram = kernel.make_gram(new_x, new_x)
 
     inverse = np.linalg.inv(np.diag(1 / df_ll) + gram)
 
@@ -124,7 +125,7 @@ def laplace_predict(new_x, x, gram, inverse_gram, laplace_mean, laplace_cov, df_
     
     return predictive_y, predictive_mean, predictive_cov
 
-def approximate_marginal_likelihood(x, y, kernel_fcn):
+def approximate_marginal_likelihood(x, y, kernel):
     """
     Computes the approximate marginal likelihood.
 
@@ -142,7 +143,7 @@ def approximate_marginal_likelihood(x, y, kernel_fcn):
     approx_ml: float
         The approximate marginal likelihood for the provided kernel function
     """
-    gram = kernel_fcn(x, x)
+    gram = kernel.make_gram(x, x)
     inverse_gram, _ = chol_inverse(gram)
     # Just want the first return value
     laplace_mean = laplace_approximation_probit(y, inverse_gram)[0]

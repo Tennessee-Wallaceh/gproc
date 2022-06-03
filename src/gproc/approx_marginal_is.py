@@ -50,9 +50,8 @@ def importance_sampler(y, x, q_mean, q_cov, N_imp, gram):
     log_gram_det = 2 * np.sum(np.log(np.diagonal(chol_gram)))
 
     # Get the log determinant and inverse of the approximate covariance matrix
-    chol_q_cov = cho_factor(q_cov + JITTER * np.eye(q_cov.shape[0]), lower=True, check_finite=True)[0]
+    inverse_q_cov, chol_q_cov = chol_inverse(q_cov)
     log_q_det = 2 * np.sum(np.log(np.diagonal(chol_q_cov)))
-    inverse_q_cov, _ = chol_inverse(q_cov)
     
     # Define log joint function
     def log_joint(y, f, inverse_gram, log_gram_det):
