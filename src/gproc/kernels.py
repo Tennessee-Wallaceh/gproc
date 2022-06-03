@@ -13,11 +13,7 @@ JITTER = 1e-5 # Add so-called jitter for stability of inversion
 class InvertError(Exception):
     pass
 
-<<<<<<< HEAD
-def chol_inverse(symmetric_x, JITTER=1e-5):
-=======
 def chol_inverse(symmetric_x, jitter=JITTER):
->>>>>>> dbefb59d13b7b5b008bd5527a3ecb11ec65d4f38
     """
     Computes the Cholesky decomposition x=LL^T, and uses this to compute the inverse of X.
     Only valid for symmetric x.
@@ -113,8 +109,8 @@ class SquaredExponential(BaseKernel):
         return np.exp(unconstrained_params)
     
     @staticmethod
-    def prior_log_pdf(constrained_params, d):
-        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+    def prior_log_pdf(constrained_params):
+        prior = gamma.logpdf(constrained_params[0], a = 2, scale = 2)
         prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
         return prior
     
@@ -173,10 +169,10 @@ class RationalQuadratic(BaseKernel):
         return np.exp(unconstrained_params)
     
     @staticmethod
-    def prior_log_pdf(constrained_params, d):
-        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+    def prior_log_pdf(constrained_params):
+        prior = gamma.logpdf(constrained_params[0], a = 2, scale = 2)
         prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 0.00001) # uninformative prior
         return prior
     
 
@@ -233,10 +229,10 @@ class Periodic(BaseKernel):
         return np.exp(unconstrained_params)
         
     @staticmethod
-    def prior_log_pdf(constrained_params, d):
-        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+    def prior_log_pdf(constrained_params):
+        prior = gamma.logpdf(constrained_params[0], a = 2, scale = 2)
         prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 0.00001) # uninformative prior
         return prior
                              
                   
@@ -302,11 +298,11 @@ class LocallyPeriodic(BaseKernel):
         return np.exp(unconstrained_params)
         
     @staticmethod
-    def prior_log_pdf(constrained_params, d):
-        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
+    def prior_log_pdf(constrained_params):
+        prior = gamma.logpdf(constrained_params[0], a = 2, scale = 2)
         prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
-        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 1/0.00001) # uninformative prior
-        prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 1/0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[2], a = 0.00001, scale = 0.00001) # uninformative prior
+        prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 0.00001) # uninformative prior
         return prior
                              
 def linear(x_1, x_2, constant_variance=0.5, variance=1.0, offset=1.0):
@@ -363,9 +359,9 @@ class Linear(BaseKernel):
         return np.concatenate((np.exp(unconstrained_params[0:2]), unconstrained_params[2].reshape(-1)))
         
     @staticmethod
-    def prior_log_pdf(constrained_params, d):
-        prior = gamma.logpdf(constrained_params[0], a = 1, scale = np.sqrt(d))
-        prior += gamma.logpdf(constrained_params[1], a = 1.2, scale = 1/0.2)
+    def prior_log_pdf(constrained_params):
+        prior = gamma.logpdf(constrained_params[3], a = 0.00001, scale = 0.00001)
+        prior += gamma.logpdf(constrained_params[3], a = 0.00001, scale = 0.00001)
         prior += norm.logpdf(constrained_params[2])
         return prior
     
@@ -417,11 +413,11 @@ def add_kernels(Kernels):
             return constrained_params
         
         @staticmethod
-        def prior_log_pdf(self, constrained_params, d):
+        def prior_log_pdf(self, constrained_params):
             prior = 0
             dim_count = 0
             for k in self.kernels:
-                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)])
                 dim_count += k.param_dim
             return prior
 
@@ -467,11 +463,11 @@ def multiply_kernels(Kernels):
             return constrained_params
         
         @staticmethod
-        def prior_log_pdf(self, constrained_params, d):
+        def prior_log_pdf(self, constrained_params):
             prior = 0
             dim_count = 0
             for k in self.kernels:
-                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)], d)
+                prior += k.prior_log_pdf(constrained_params[dim_count:(dim_count + k.param_dim)])
                 dim_count += k.param_dim
             return prior
 

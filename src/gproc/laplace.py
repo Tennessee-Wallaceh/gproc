@@ -143,7 +143,7 @@ def approximate_marginal_likelihood(x, y, kernel_fcn):
         The approximate marginal likelihood for the provided kernel function
     """
     gram = kernel_fcn(x, x)
-    inverse_gram = chol_inverse(gram)
+    inverse_gram, _ = chol_inverse(gram)
     # Just want the first return value
     laplace_mean = laplace_approximation_probit(y, inverse_gram)[0]
     _, hessian = ll_gradients(laplace_mean, y)

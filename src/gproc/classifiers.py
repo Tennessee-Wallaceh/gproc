@@ -37,7 +37,7 @@ def simple_laplace(x_train, y_train, kernel_fcn):
     """
     fit_info = {}
     train_gram = kernel_fcn(x_train, x_train)
-    inverse_train_gram = chol_inverse(train_gram)
+    inverse_train_gram, _ = chol_inverse(train_gram)
 
     laplace_mean, df_ll, laplace_cov, _, converged = laplace_approximation_probit(y_train, inverse_train_gram)
 
@@ -108,7 +108,7 @@ def gridsearch_laplace(x_train, y_train, kernel_fcn, search_space):
     best_ix = np.argmax(marginal_lls)
     best_params = test_params[best_ix]
     train_gram = kernel_fcn(x_train, x_train, *best_params)
-    inverse_train_gram = chol_inverse(train_gram)
+    inverse_train_gram, _ = chol_inverse(train_gram)
     laplace_mean, df_ll, laplace_cov, _, converged = laplace_approximation_probit(y_train, inverse_train_gram)
     assert converged, 'Laplace approximation did not converge!'
 
@@ -197,12 +197,12 @@ def full_bayesian_pseudo_marginal(x_train, y_train, Kernel):
     th_0_constrained = Kernel.constrain_params(th_0)
     initial_kernel = Kernel(*th_0_constrained)
     gram = initial_kernel.make_gram(x_train, x_train)
-    inverse_gram = chol_inverse(gram)
+    inverse_gram, _ = chol_inverse(gram)
     laplace_mean, df_ll, laplace_cov, _, converged = laplace_approximation_probit(y_train, inverse_gram)
     
     assert converged, f'Initial Laplace approximation did not converge!'
 
-    marg_0 = importance_sampler(y_train, x_train, laplace_mean, laplace_cov, 100)
+    marg_0 = importance_sampler(y_train, x_train, laplace_mean, laplace_cov, 100, gram)
 
     # Run joint sample
     f_arr, th_arr, marg_arr, move_arr, acc_rate_hist, cov_scale_hist, inverse_gram_arr = joint_sampler(

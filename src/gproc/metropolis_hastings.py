@@ -66,10 +66,8 @@ def mh_step(y, x, Kernel, th_old, marg_old, cov, N_imp = 100):
     marg_new = importance_sampler(y, x, laplace_mean, laplace_cov, N_imp, gram)
     
     # Compute MH log ratio
-    # Dimension of covariates for Gamma prior hyperameters in MH ratio
-    d = x.shape[1]
-    numer = marg_new +  Kernel.prior_log_pdf(th_new_constrained, d) + multivariate_normal.logpdf(th_old, mean = th_new)
-    denom = marg_old +  Kernel.prior_log_pdf(th_old_constrained, d) + multivariate_normal.logpdf(th_new, mean = th_old)
+    numer = marg_new +  Kernel.prior_log_pdf(th_new_constrained) + multivariate_normal.logpdf(th_old, mean = th_new)
+    denom = marg_old +  Kernel.prior_log_pdf(th_old_constrained) + multivariate_normal.logpdf(th_new, mean = th_old)
     logratio = numer - denom
     
     # Check if we should move
