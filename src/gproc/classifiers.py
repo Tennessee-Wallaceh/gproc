@@ -197,7 +197,7 @@ def full_bayesian_pseudo_marginal(x_train, y_train, Kernel):
     fit_info = {}
 
     # Get initial estimate
-    th_0 = np.zeros(Kernel.param_dim) # The initial unconstrained kernel parameters
+    th_0 = np.ones(Kernel.param_dim) # The initial unconstrained kernel parameters
     th_0_constrained = Kernel.constrain_params(th_0)
     initial_kernel = Kernel(*th_0_constrained)
     gram = initial_kernel.make_gram(x_train, x_train)
